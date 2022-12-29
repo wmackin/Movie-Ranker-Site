@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const path = require('path');
 const mysql = require('mysql');
+const { getPassword } = require('./getPassword');
 const app = express();
 const port = 8000;
 
@@ -19,7 +20,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 const connection = mysql.createConnection({
 	host     : 'localhost',
 	user     : 'root',
-	password : '',
+	password : getPassword(),
 	database : 'rankings'
 });
 
