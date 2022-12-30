@@ -16,6 +16,8 @@
     "express-session": "^1.17.3",
     "mysql": "^2.18.1",
     "mysql2": "^2.3.3",
+    "node-fetch": "^3.3.0",
     "pug": "^3.0.2"
-  }
+  },
+  "type": "module"
 }

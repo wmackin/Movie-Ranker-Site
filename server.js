@@ -1,11 +1,22 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const session = require('express-session');
-const path = require('path');
-const mysql = require('mysql');
-const { getPassword } = require('./getPassword');
+// const express = require('express');
+// const fetch = require('node-fetch');
+// const bodyParser = require('body-parser');
+// const session = require('express-session');
+// const path = require('path');
+// const mysql = require('mysql');
+// const { getPassword } = require('./getPassword.js');
+import express from 'express';
+import fetch from 'node-fetch';
+import bodyParser from 'body-parser';
+import session from 'express-session';
+import path from 'path';
+import mysql from 'mysql';
+import {fileURLToPath} from 'url';
+import {getPassword} from './getPassword.js';
 const app = express();
 const port = 8000;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(session({
     secret: 'secret',
@@ -22,6 +33,12 @@ const connection = mysql.createConnection({
 	user     : 'root',
 	password : getPassword(),
 	database : 'rankings'
+});
+
+app.get('/logout', async (req, res) => {
+    req.loggedin = false;
+    req.username = null;
+    res.sendFile(path.join(__dirname + '/login.html'));
 });
 
 //authentication, sourced from https://codeshack.io/basic-login-system-nodejs-express-mysql/
@@ -59,7 +76,7 @@ app.get('/home', function (req, res) {
     // If the user is loggedin
     if (req.session.loggedin) {
         // Output username
-        res.send('Welcome back, ' + req.session.username + '!');
+        res.send('Welcome back, ' + req.session.username + '! <a href="/logout">Logout</a>');
     } else {
         // Not logged in
         res.send('Please login to view this page!');
