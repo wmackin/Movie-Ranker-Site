@@ -2,6 +2,7 @@ const signupButton = document.getElementById('signupButton');
 signupButton.addEventListener('click', async e => {
     const response = await fetch('/userExists', {
         method: "POST",
+        headers:  {'Content-Type': 'application/json'},
         body: JSON.stringify({ "user": document.getElementById("username").value })
     });
     if (response.ok) {

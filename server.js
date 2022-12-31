@@ -27,7 +27,7 @@ app.use(session({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // app.use(express.static(path.join(__dirname, 'static')));
-app.use(express.static(__dirname+ '/public'));
+app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 
 const connection = mysql.createConnection({
@@ -57,24 +57,35 @@ function createHash(password) {
 function validatePassword(password, hashedPassword, salt) {
     let hash = crypto.createHmac("sha512", salt);
     hash.update(password);
-    userpassword = hash.digest("hex");
+    const userpassword = hash.digest("hex");
     return userpassword == hashedPassword;
 }
 
-function addUser(username, password) {
-    connection.query('SELECT * FROM accounts WHERE username = ?;', [username], function(error, results) {
-        if (error) throw error;
-        if (results.length > 0) {
-            return false;
-        }
-        else {
-            const encryption = createHash(password);
-            connection.query('INSERT INTO accounts (username, password, salt) VALUES (?, ?, ?);', [username, encryption['hash'], encryption['salt']], function(error, results) {
-                if (error) throw error;
-            });
-        }			
-        return true;
-    });
+async function addUser(username, password) {
+    const results = await connection.query('SELECT * FROM accounts WHERE username = ?;', [username]);
+    if (results.length > 0) {
+        return false;
+    }
+    else {
+        const encryption = createHash(password);
+        connection.query('INSERT INTO accounts (username, password, salt) VALUES (?, ?, ?);', [username, encryption['hash'], encryption['salt']], function (error, results) {
+            if (error) throw error;
+        });
+    }
+    return true;
+    // await connection.query('SELECT * FROM accounts WHERE username = ?;', [username], function(error, results) {
+    //     if (error) throw error;
+    //     if (results.length > 0) {
+    //         return false;
+    //     }
+    //     else {
+    //         const encryption = createHash(password);
+    //         connection.query('INSERT INTO accounts (username, password, salt) VALUES (?, ?, ?);', [username, encryption['hash'], encryption['salt']], function(error, results) {
+    //             if (error) throw error;
+    //         });
+    //     }			
+    //     return true;
+    // });
 }
 
 app.get('/signup.js', (req, res) => {
@@ -92,36 +103,34 @@ app.get('/logout', async (req, res) => {
 });
 
 app.post('/userExists', function (req, res) {
-    const username = req.user;
-    connection.query('SELECT * FROM accounts WHERE username = ?;', [username], function(error, results) {
+    const username = req.body.user;
+    connection.query('SELECT * FROM accounts WHERE username = ?;', [username], function (error, results) {
         if (error) throw error;
         if (results.length > 0) {
-            res.json({'exists': true});
+            res.json({ 'exists': true });
         }
         else {
-            res.json({'exists': false});
-        }			
+            res.json({ 'exists': false });
+        }
     });
 });
 
 //authentication, sourced from https://codeshack.io/basic-login-system-nodejs-express-mysql/
 app.post('/auth', function (req, res) {
-    // Capture the input fields
     let username = req.body.username;
     let password = req.body.password;
-    // Ensure the input fields exists and are not empty
     if (username && password) {
-        // Execute SQL query that'll select the account from the database based on the specified username and password
-        connection.query('SELECT * FROM accounts WHERE username = ? AND password = ?', [username, password], function (error, results) {
-            // If there is an issue with the query, output the error
+        connection.query('SELECT password, salt FROM accounts WHERE username = ?;', [username], function (error, results) {
             if (error) throw error;
-            // If the account exists
             if (results.length > 0) {
-                // Authenticate the user
-                req.session.loggedin = true;
-                req.session.username = username;
-                // Redirect to home page
-                res.redirect('/home');
+                if (validatePassword(password, results[0]['password'], results[0]['salt'])) {
+                    req.session.loggedin = true;
+                    req.session.username = username;
+                    res.redirect('/home');
+                }
+                else {
+                    res.send('Incorrect Username and/or Password!');
+                }
             } else {
                 res.send('Incorrect Username and/or Password!');
             }
@@ -139,13 +148,13 @@ app.get('/home', async function (req, res) {
     // If the user is loggedin
     if (req.session.loggedin) {
         // Output username
-        const url = 'https://api.letterboxd.com/api/v0';
-        const film = "Star Wars";
-        const response = await fetch(url + `/search?input=${film}&searchMethod=Autocomplete&include=FilmSearchItem`);
-        if (response.ok) {
-            let film = await response.json();
-            console.log(film);
-        }
+        // const url = 'https://api.letterboxd.com/api/v0';
+        // const film = "Star Wars";
+        // const response = await fetch(url + `/search?input=${film}&searchMethod=Autocomplete&include=FilmSearchItem`);
+        // if (response.ok) {
+        //     let film = await response.json();
+        //     console.log(film);
+        // }
         res.send('Welcome back, ' + req.session.username + '! <a href="/logout">Logout</a>');
     } else {
         // Not logged in
@@ -157,7 +166,7 @@ app.get('/home', async function (req, res) {
 app.post('/createAccount', async (req, res) => {
     const username = req.body.user;
     const password = req.body.password;
-    const userAdded = addUser(username, password);
+    const userAdded = await addUser(username, password);
     if (userAdded) {
         res.redirect('/login');
     }
@@ -168,6 +177,10 @@ app.post('/createAccount', async (req, res) => {
 
 app.get('/signup', (req, res) => {
     res.sendFile(path.join(__dirname + '/signup.html'));
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname + '/login.html'));
 });
 
 app.get('/', (req, res) => {
