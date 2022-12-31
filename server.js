@@ -92,6 +92,10 @@ app.get('/signup.js', (req, res) => {
     res.sendFile('./signup.js', { root: __dirname });
 });
 
+app.get('/main.js', (req, res) => {
+    res.sendFile('./main.js', { root: __dirname });
+});
+
 app.get('/main.css', (req, res) => {
     res.sendFile('./main.css', { root: __dirname });
 });
@@ -147,20 +151,13 @@ app.post('/auth', function (req, res) {
 app.get('/home', async function (req, res) {
     // If the user is loggedin
     if (req.session.loggedin) {
-        // Output username
-        // const url = 'https://api.letterboxd.com/api/v0';
-        // const film = "Star Wars";
-        // const response = await fetch(url + `/search?input=${film}&searchMethod=Autocomplete&include=FilmSearchItem`);
-        // if (response.ok) {
-        //     let film = await response.json();
-        //     console.log(film);
-        // }
-        res.send('Welcome back, ' + req.session.username + '! <a href="/logout">Logout</a>');
-    } else {
+        res.sendFile(path.join(__dirname + '/searchPage.html'));
+    }
+    else {
         // Not logged in
         res.send('Please login to view this page!');
+        res.end();
     }
-    res.end();
 });
 
 app.post('/createAccount', async (req, res) => {
@@ -185,6 +182,10 @@ app.get('/login', (req, res) => {
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname + '/login.html'));
+});
+
+app.get('/currentUser', (req, res) => {
+    res.send(req.session.username);
 });
 
 app.listen(port, () => {
