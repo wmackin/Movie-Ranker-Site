@@ -13,7 +13,7 @@ import path from 'path';
 import mysql from 'mysql';
 import crypto from "crypto";
 import { fileURLToPath } from 'url';
-import { getPassword } from './getPassword.js';
+import { getPassword, key } from './getPassword.js';
 const app = express();
 const port = 8000;
 const __filename = fileURLToPath(import.meta.url);
@@ -187,6 +187,10 @@ app.get('/', (req, res) => {
 app.get('/currentUser', (req, res) => {
     res.send(req.session.username);
 });
+
+app.get('/getAPIKey', (req, res) => {
+    res.json({value: key});
+})
 
 app.listen(port, () => {
     console.log(`Success! Your application is running on port ${port}.`);
