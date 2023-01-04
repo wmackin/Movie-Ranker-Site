@@ -92,8 +92,12 @@ app.get('/signup.js', (req, res) => {
     res.sendFile('./signup.js', { root: __dirname });
 });
 
-app.get('/main.js', (req, res) => {
-    res.sendFile('./main.js', { root: __dirname });
+app.get('/search.js', (req, res) => {
+    res.sendFile('./search.js', { root: __dirname });
+});
+
+app.get('/userLists.js', (req, res) => {
+    res.sendFile('./userLists.js', { root: __dirname });
 });
 
 app.get('/main.css', (req, res) => {
@@ -107,7 +111,7 @@ app.get('/logout', async (req, res) => {
 });
 
 app.post('/userExists', function (req, res) {
-    const username = req.body.user;
+    const username = req.session.username;
     connection.query('SELECT * FROM accounts WHERE username = ?;', [username], function (error, results) {
         if (error) throw error;
         if (results.length > 0) {
@@ -117,6 +121,23 @@ app.post('/userExists', function (req, res) {
             res.json({ 'exists': false });
         }
     });
+});
+
+app.get('/userLists', function (req, res) {
+    const username = req.session.username;
+    connection.query('SELECT list FROM list_names WHERE username = ?;', [username], function (error, results) {
+        if (error) throw error;
+        res.json(results);
+    });
+});
+
+app.post('/createList', function(req, res) {
+    const username = req.session.username;
+    const listName = req.body.listName;
+    connection.query('INSERT INTO list_names VALUES(?, ?);', [username, listName], function (error, results) {
+        if (error) throw error;
+        res.json({'success': true, 'msg': 'Successfully created ' + listName});
+    })
 });
 
 //authentication, sourced from https://codeshack.io/basic-login-system-nodejs-express-mysql/
@@ -146,9 +167,19 @@ app.post('/auth', function (req, res) {
     }
 });
 
-//sourced from https://codeshack.io/basic-login-system-nodejs-express-mysql/
-//will be replaced at some point
 app.get('/home', async function (req, res) {
+    // If the user is loggedin
+    if (req.session.loggedin) {
+        res.sendFile(path.join(__dirname + '/userLists.html'));
+    }
+    else {
+        // Not logged in
+        res.send('Please login to view this page!');
+        res.end();
+    }
+});
+
+app.get('/search', async function (req, res) {
     // If the user is loggedin
     if (req.session.loggedin) {
         res.sendFile(path.join(__dirname + '/searchPage.html'));
