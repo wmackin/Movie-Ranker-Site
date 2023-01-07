@@ -131,13 +131,49 @@ app.get('/userLists', function (req, res) {
     });
 });
 
-app.post('/createList', function(req, res) {
+app.post('/createList', function (req, res) {
     const username = req.session.username;
     const listName = req.body.listName;
     connection.query('INSERT INTO list_names VALUES(?, ?);', [username, listName], function (error, results) {
         if (error) throw error;
-        res.json({'success': true, 'msg': 'Successfully created ' + listName});
+        res.json({ 'success': true, 'msg': 'Successfully created ' + listName });
     })
+});
+
+app.post('/deleteList', function (req, res) {
+    const username = req.session.username;
+    const listName = req.body.listName;
+    connection.query('DELETE FROM list_names WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
+        if (error) throw error;
+    });
+    connection.query('DELETE FROM lists WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
+        if (error) throw error;
+    });
+    res.end();
+});
+
+app.post('/addToList', function (req, res) {
+    //THIS CODE IS COPIED FROM ABOVE, NEED TO EDIT
+    const username = req.session.username;
+    const listName = req.body.listName;
+    const id = req.body.id;
+    const title = req.body.title;
+    const year = parseInt(req.body.year);
+    const poster = req.body.poster;
+    connection.query('SELECT * FROM lists WHERE username = ? AND list = ? AND id = ?;', [username, listName, id], function (error, results) {
+        if (error) throw error;
+        if (results.length !== 0) {
+            res.json({ 'msg': 'Movie already in list.' });
+            res.end();
+        }
+        else {
+            connection.query('INSERT INTO lists VALUES(?, ?, ?, ?, ?, ?);', [username, listName, id, title, year, poster], function (error, results) {
+                if (error) throw error;
+                res.json({ 'msg': 'Successfully added movie to list.' });
+                res.end();
+            });
+        }
+    });
 });
 
 //authentication, sourced from https://codeshack.io/basic-login-system-nodejs-express-mysql/
@@ -168,6 +204,18 @@ app.post('/auth', function (req, res) {
 });
 
 app.get('/home', async function (req, res) {
+    // If the user is loggedin
+    if (req.session.loggedin) {
+        res.sendFile(path.join(__dirname + '/searchPage.html'));
+    }
+    else {
+        // Not logged in
+        res.send('Please login to view this page!');
+        res.end();
+    }
+});
+
+app.get('/lists', async function (req, res) {
     // If the user is loggedin
     if (req.session.loggedin) {
         res.sendFile(path.join(__dirname + '/userLists.html'));
@@ -220,7 +268,7 @@ app.get('/currentUser', (req, res) => {
 });
 
 app.get('/getAPIKey', (req, res) => {
-    res.json({value: key});
+    res.json({ value: key });
 })
 
 app.listen(port, () => {

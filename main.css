@@ -1,3 +1,7 @@
-#confirmError {
+.error {
     color:red
+}
+
+html {
+    width: 100%;
 }
