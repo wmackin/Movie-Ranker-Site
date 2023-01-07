@@ -1,7 +1,17 @@
 .error {
-    color:red
+    color: red
 }
 
 html {
     width: 100%;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(10, auto); 
+    gap: 0px;
+}
+
+img {
+    width: 100%
 }

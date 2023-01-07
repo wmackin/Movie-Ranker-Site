@@ -97,18 +97,51 @@ document.getElementById('searchID').addEventListener('click', async e => {
     };
     const movieID = document.getElementById('idSearch').value;
     const response = await fetch(`https://movie-database-alternative.p.rapidapi.com/?i=${movieID}`, options);
-    let content = '';
     if (response.ok) {
         const data = await response.json();
         if (data["Response"] === "True") {
             const img = data["Poster"];
             const name = data["Title"];
             const year = data["Year"];
-            content += `<img src=${img}><h1>${name} (${year})</h1>`;
+            const id = data["imdbID"];
+            const imgNode = document.createElement('img');
+            imgNode.src = img;
+            const heading = document.createElement('h1');
+            heading.innerHTML = `${name} (${year})`;
+            const dropdownCopy = dropdown.cloneNode(true);
+            const addToList = document.createElement('button');
+            addToList.innerHTML = 'Add to list';
+            const errorText = document.createElement('p');
+            errorText.class = 'error';
+            addToList.addEventListener('click', async () => {
+                const listName = dropdownCopy.options[dropdownCopy.selectedIndex].value;;
+                const addResponse = await fetch('/addToList', {
+                    method: "POST",
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        listName: listName, id: id, title: name,
+                        year: year, poster: img
+                    }),
+                });
+                if (addResponse.ok) {
+                    const addMsg = await addResponse.json();
+                    errorText.innerHTML = addMsg['msg'];
+                }
+            });
+            const resultDiv = document.createElement('div');
+            resultDiv.id = id;
+            resultDiv.appendChild(imgNode);
+            resultDiv.appendChild(heading);
+            resultDiv.appendChild(dropdownCopy);
+            resultDiv.appendChild(addToList);
+            resultDiv.appendChild(errorText);
+            resultDiv.appendChild(document.createElement('br'));
+            resultDiv.appendChild(document.createElement('br'));
+            document.getElementById('searchOutput').appendChild(resultDiv);
         }
         else {
-            content = '<p>No results.</p>'
+            document.getElementById('searchOutput').innerHTML = '<p>No results.</p>';
         }
-        document.getElementById('searchOutput').innerHTML = content;
     }
 });

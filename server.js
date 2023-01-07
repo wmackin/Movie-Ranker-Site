@@ -152,6 +152,16 @@ app.post('/deleteList', function (req, res) {
     res.end();
 });
 
+app.post('/getList', function (req, res) {
+    const username = req.session.username;
+    const listName = req.body.listName;
+    connection.query('SELECT * FROM lists WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
+        if (error) throw error;
+        res.send(results);
+        res.end();
+    });
+});
+
 app.post('/addToList', function (req, res) {
     //THIS CODE IS COPIED FROM ABOVE, NEED TO EDIT
     const username = req.session.username;
@@ -206,7 +216,7 @@ app.post('/auth', function (req, res) {
 app.get('/home', async function (req, res) {
     // If the user is loggedin
     if (req.session.loggedin) {
-        res.sendFile(path.join(__dirname + '/searchPage.html'));
+        res.sendFile(path.join(__dirname + '/userLists.html'));
     }
     else {
         // Not logged in

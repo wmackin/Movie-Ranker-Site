@@ -44,3 +44,25 @@ document.getElementById('deleteList').addEventListener('click', async () => {
         location.reload();
     }
 });
+
+document.getElementById('viewList').addEventListener('click', async () => {
+    const listName = document.getElementById('userLists').value;
+    const response = await fetch('/getList', {
+        method: "POST",
+        redirect: 'follow',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listName: listName }),
+    });
+    if (response.ok) {
+        const list = await response.json();
+        list.forEach(m => {
+            const imgNode = document.createElement('img');
+            imgNode.src = m['poster'];
+            imgNode.classList.add('image-display')
+            const newDiv = document.createElement('div');
+            newDiv.classList.add('grid-item');
+            newDiv.appendChild(imgNode);
+            document.getElementById('viewingDiv').appendChild(newDiv);
+        })
+    }
+});
