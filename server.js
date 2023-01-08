@@ -155,7 +155,7 @@ app.post('/deleteList', function (req, res) {
 app.post('/getList', function (req, res) {
     const username = req.session.username;
     const listName = req.body.listName;
-    connection.query('SELECT * FROM lists WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
+    connection.query('SELECT * FROM lists WHERE username = ? AND list = ? ORDER BY wins;', [username, listName], function (error, results) {
         if (error) throw error;
         res.send(results);
         res.end();
@@ -249,6 +249,19 @@ app.get('/search', async function (req, res) {
     }
 });
 
+app.post('/rankList', async function (req, res) {
+    // If the user is loggedin
+    if (req.session.loggedin) {
+        req.session.list = req.body.listName;
+        res.redirect('/rank')
+    }
+    else {
+        // Not logged in
+        res.send('Please login to view this page!');
+        res.end();
+    }
+});
+
 app.post('/createAccount', async (req, res) => {
     const username = req.body.user;
     const password = req.body.password;
@@ -260,6 +273,10 @@ app.post('/createAccount', async (req, res) => {
         res.redirect('/signup');
     }
 })
+
+app.get('/rank', (req, res) => {
+    res.sendFile(path.join(__dirname + '/rank.html'));
+});
 
 app.get('/signup', (req, res) => {
     res.sendFile(path.join(__dirname + '/signup.html'));
