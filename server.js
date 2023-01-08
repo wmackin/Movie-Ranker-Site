@@ -73,19 +73,6 @@ async function addUser(username, password) {
         });
     }
     return true;
-    // await connection.query('SELECT * FROM accounts WHERE username = ?;', [username], function(error, results) {
-    //     if (error) throw error;
-    //     if (results.length > 0) {
-    //         return false;
-    //     }
-    //     else {
-    //         const encryption = createHash(password);
-    //         connection.query('INSERT INTO accounts (username, password, salt) VALUES (?, ?, ?);', [username, encryption['hash'], encryption['salt']], function(error, results) {
-    //             if (error) throw error;
-    //         });
-    //     }			
-    //     return true;
-    // });
 }
 
 app.get('/signup.js', (req, res) => {
@@ -163,7 +150,6 @@ app.post('/getList', function (req, res) {
 });
 
 app.post('/addToList', function (req, res) {
-    //THIS CODE IS COPIED FROM ABOVE, NEED TO EDIT
     const username = req.session.username;
     const listName = req.body.listName;
     const id = req.body.id;
@@ -177,11 +163,27 @@ app.post('/addToList', function (req, res) {
             res.end();
         }
         else {
-            connection.query('INSERT INTO lists VALUES(?, ?, ?, ?, ?, ?);', [username, listName, id, title, year, poster], function (error, results) {
+            connection.query('SELECT * FROM lists WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
+                if (error) throw error;
+                results.forEach(r => {
+                    if (Math.random() < 0.5) {
+                        connection.query('INSERT INTO unranked VALUES(?, ?, ?, ?);', [username, listName, id, r['id']], function (error, results) {
+                            if (error) throw error;
+                        });
+                    }
+                    else {
+                        connection.query('INSERT INTO unranked VALUES(?, ?, ?, ?);', [username, listName, r['id'], id], function (error, results) {
+                            if (error) throw error;
+                        });
+                    }
+                });
+            });
+            connection.query('INSERT INTO lists VALUES(?, ?, ?, ?, ?, ?, 0);', [username, listName, id, title, year, poster], function (error, results) {
                 if (error) throw error;
                 res.json({ 'msg': 'Successfully added movie to list.' });
                 res.end();
             });
+
         }
     });
 });
