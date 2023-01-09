@@ -114,7 +114,7 @@ document.getElementById('searchID').addEventListener('click', async e => {
             const errorText = document.createElement('p');
             errorText.class = 'error';
             addToList.addEventListener('click', async () => {
-                const listName = dropdownCopy.options[dropdownCopy.selectedIndex].value;;
+                const listName = dropdownCopy.options[dropdownCopy.selectedIndex].value;
                 const addResponse = await fetch('/addToList', {
                     method: "POST",
                     redirect: 'follow',

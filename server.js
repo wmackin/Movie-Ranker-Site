@@ -87,6 +87,10 @@ app.get('/userLists.js', (req, res) => {
     res.sendFile('./userLists.js', { root: __dirname });
 });
 
+app.get('/rank.js', (req, res) => {
+    res.sendFile('./rank.js', { root: __dirname });
+});
+
 app.get('/main.css', (req, res) => {
     res.sendFile('./main.css', { root: __dirname });
 });
@@ -107,6 +111,15 @@ app.post('/userExists', function (req, res) {
         else {
             res.json({ 'exists': false });
         }
+    });
+});
+
+app.get('/getUnranked', function (req, res) {
+    const username = req.session.username;
+    const listName = req.session.list;
+    connection.query('SELECT * FROM unranked WHERE username = ? AND list = ? ORDER BY RAND();', [username, listName], function (error, results) {
+        if (error) throw error;
+        res.json(results);
     });
 });
 
@@ -142,7 +155,7 @@ app.post('/deleteList', function (req, res) {
 app.post('/getList', function (req, res) {
     const username = req.session.username;
     const listName = req.body.listName;
-    connection.query('SELECT * FROM lists WHERE username = ? AND list = ? ORDER BY wins;', [username, listName], function (error, results) {
+    connection.query('SELECT * FROM lists WHERE username = ? AND list = ? ORDER BY wins DESC;', [username, listName], function (error, results) {
         if (error) throw error;
         res.send(results);
         res.end();
@@ -186,6 +199,25 @@ app.post('/addToList', function (req, res) {
 
         }
     });
+});
+
+app.post('/submitRanking', function (req, res) {
+    const username = req.session.username;
+    const listName = req.session.list;
+    const winner = req.body.winner;
+    const loser = req.body.loser;
+    const id1 = req.body.id1;
+    const id2 = req.body.id2;
+    connection.query('INSERT INTO rankings VALUES(?, ?, ?, ?);', [username, listName, winner, loser], function (error, results) {
+        if (error) throw error;
+    });
+    connection.query('DELETE FROM unranked WHERE username = ? AND list = ? and id1 = ? and id2 = ?;', [username, listName, id1, id2], function (error, results) {
+        if (error) throw error;
+    });
+    connection.query('UPDATE lists SET wins = wins + 1 WHERE username = ? AND list = ? and id = ?;', [username, listName, winner], function (error, results) {
+        if (error) throw error;
+    });
+    res.end();
 });
 
 //authentication, sourced from https://codeshack.io/basic-login-system-nodejs-express-mysql/
@@ -295,6 +327,13 @@ app.get('/', (req, res) => {
 app.get('/currentUser', (req, res) => {
     res.send(req.session.username);
 });
+
+app.post('/getInfo', (req, res) => {
+    connection.query('SELECT poster FROM lists WHERE id = ?;', [req.body.id], function(error, results) {
+        if (error) throw error;
+        res.json(results);
+    });
+})
 
 app.get('/getAPIKey', (req, res) => {
     res.json({ value: key });

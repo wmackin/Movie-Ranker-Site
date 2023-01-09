@@ -55,6 +55,10 @@ document.getElementById('viewList').addEventListener('click', async () => {
     });
     if (response.ok) {
         const list = await response.json();
+        const viewingDiv = document.getElementById('viewingDiv');
+        while (viewingDiv.firstChild) {
+            viewingDiv.removeChild(viewingDiv.firstChild);
+        }
         list.forEach(m => {
             const imgNode = document.createElement('img');
             imgNode.src = m['poster'];
@@ -62,7 +66,7 @@ document.getElementById('viewList').addEventListener('click', async () => {
             const newDiv = document.createElement('div');
             newDiv.classList.add('grid-item');
             newDiv.appendChild(imgNode);
-            document.getElementById('viewingDiv').appendChild(newDiv);
+            viewingDiv.appendChild(newDiv);
         })
     }
 });
