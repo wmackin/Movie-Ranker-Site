@@ -149,13 +149,19 @@ app.post('/deleteList', function (req, res) {
     connection.query('DELETE FROM lists WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
         if (error) throw error;
     });
+    connection.query('DELETE FROM rankings WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
+        if (error) throw error;
+    });
+    connection.query('DELETE FROM unranked WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
+        if (error) throw error;
+    });
     res.end();
 });
 
 app.post('/getList', function (req, res) {
     const username = req.session.username;
     const listName = req.body.listName;
-    connection.query('SELECT * FROM lists WHERE username = ? AND list = ? ORDER BY wins DESC;', [username, listName], function (error, results) {
+    connection.query('SELECT *, wins - losses AS score FROM lists WHERE username = ? AND list = ? ORDER BY score DESC;', [username, listName], function (error, results) {
         if (error) throw error;
         res.send(results);
         res.end();
@@ -191,12 +197,57 @@ app.post('/addToList', function (req, res) {
                     }
                 });
             });
-            connection.query('INSERT INTO lists VALUES(?, ?, ?, ?, ?, ?, 0);', [username, listName, id, title, year, poster], function (error, results) {
+            connection.query('INSERT INTO lists VALUES(?, ?, ?, ?, ?, ?, 0, 0);', [username, listName, id, title, year, poster], function (error, results) {
                 if (error) throw error;
                 res.json({ 'msg': 'Successfully added movie to list.' });
                 res.end();
             });
 
+        }
+    });
+});
+
+app.post('/removeFromList', function (req, res) {
+    const username = req.session.username;
+    const listName = req.body.listName;
+    const id = req.body.id;
+    connection.query('SELECT * FROM lists WHERE username = ? AND list = ? AND id = ?;', [username, listName, id], function (error, results) {
+        if (error) throw error;
+        if (results.length === 0) {
+            res.json({ 'msg': 'Movie not in list.' });
+            res.end();
+        }
+        else {
+            connection.query('DELETE FROM lists WHERE username = ? AND list = ? AND id = ?;', [username, listName, id], function (error, results) {
+                if (error) throw error;
+            });
+            connection.query('DELETE FROM unranked WHERE username = ? AND list = ? AND (id1 = ? OR id2 = ?);', [username, listName, id, id], function (error, results) {
+                if (error) throw error;
+            });
+            connection.query('SELECT * FROM rankings WHERE username = ? AND list = ? AND winner = ?;', [username, listName, id], function (error, results) {
+                if (error) throw error;
+                results.forEach(r => {
+                    const loser = r['loser'];
+                    connection.query('UPDATE lists SET losses = losses - 1 WHERE username = ? AND list = ? AND id = ?;', [username, listName, loser], function (error, results) {
+                        if (error) throw error;
+                    });
+                });
+                connection.query('SELECT * FROM rankings WHERE username = ? AND list = ? AND loser = ?;', [username, listName, id], function (error, results) {
+                    if (error) throw error;
+                    results.forEach(r => {
+                        const winner = r['winner'];
+                        connection.query('UPDATE lists SET wins = wins - 1 WHERE username = ? AND list = ? AND id = ?;', [username, listName, winner], function (error, results) {
+                            if (error) throw error;
+                        });
+                    });
+                    connection.query('DELETE FROM rankings WHERE username = ? AND list = ? AND (winner = ? OR loser = ?);', [username, listName, id, id], function (error, results) {
+                        if (error) throw error;
+                        res.json({ 'msg': 'Successfully removed movie from list.' });
+                        res.end();
+                    });
+                    
+                });
+            });
         }
     });
 });
@@ -215,6 +266,9 @@ app.post('/submitRanking', function (req, res) {
         if (error) throw error;
     });
     connection.query('UPDATE lists SET wins = wins + 1 WHERE username = ? AND list = ? and id = ?;', [username, listName, winner], function (error, results) {
+        if (error) throw error;
+    });
+    connection.query('UPDATE lists SET losses = losses + 1 WHERE username = ? AND list = ? and id = ?;', [username, listName, loser], function (error, results) {
         if (error) throw error;
     });
     res.end();
@@ -329,7 +383,7 @@ app.get('/currentUser', (req, res) => {
 });
 
 app.post('/getInfo', (req, res) => {
-    connection.query('SELECT poster FROM lists WHERE id = ?;', [req.body.id], function(error, results) {
+    connection.query('SELECT poster FROM lists WHERE id = ?;', [req.body.id], function (error, results) {
         if (error) throw error;
         res.json(results);
     });
