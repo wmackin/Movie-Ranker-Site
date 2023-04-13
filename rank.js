@@ -16,10 +16,10 @@ async function getTwoMovies() {
         }
     }
     else {
-        document.getElementById('poster1').src = '';
-        document.getElementById('poster2').src = '';
         document.getElementById('movieTitle1').src = '';
         document.getElementById('movieTitle2').src = '';
+        document.getElementById('poster1').src = '';
+        document.getElementById('poster2').src = '';
         id1 = unrankedMovies[0]['id1'];
         const infoResponse1 = await fetch('/getInfo', {
             method: "POST",
