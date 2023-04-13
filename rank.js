@@ -16,8 +16,8 @@ async function getTwoMovies() {
         }
     }
     else {
-        document.getElementById('movieTitle1').src = '';
-        document.getElementById('movieTitle2').src = '';
+        document.getElementById('movieTitle1').innerHTML = '';
+        document.getElementById('movieTitle2').innerHTML = '';
         document.getElementById('poster1').src = '';
         document.getElementById('poster2').src = '';
         id1 = unrankedMovies[0]['id1'];
