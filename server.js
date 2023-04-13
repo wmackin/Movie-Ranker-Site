@@ -383,7 +383,7 @@ app.get('/currentUser', (req, res) => {
 });
 
 app.post('/getInfo', (req, res) => {
-    connection.query('SELECT poster FROM lists WHERE id = ?;', [req.body.id], function (error, results) {
+    connection.query('SELECT title, year, poster FROM lists WHERE id = ?;', [req.body.id], function (error, results) {
         if (error) throw error;
         res.json(results);
     });
