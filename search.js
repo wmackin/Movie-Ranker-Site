@@ -151,12 +151,30 @@ document.getElementById('searchID').addEventListener('click', async e => {
                             errorText.innerHTML = addMsg['msg'];
                         }
                     });
+                    const removeFromList = document.createElement('button');
+                    removeFromList.innerHTML = 'Remove from list';
+                    removeFromList.addEventListener('click', async () => {
+                        const listName = dropdownCopy.options[dropdownCopy.selectedIndex].value;;
+                        const removeResponse = await fetch('/removeFromList', {
+                            method: "POST",
+                            redirect: 'follow',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                listName: listName, id: id
+                            }),
+                        });
+                        if (removeResponse.ok) {
+                            const removeMsg = await removeResponse.json();
+                            errorText.innerHTML = removeMsg['msg'];
+                        }
+                    });
                     const resultDiv = document.createElement('div');
                     resultDiv.id = id;
                     resultDiv.appendChild(imgNode);
                     resultDiv.appendChild(heading);
                     resultDiv.appendChild(dropdownCopy);
                     resultDiv.appendChild(addToList);
+                    resultDiv.appendChild(removeFromList);
                     resultDiv.appendChild(errorText);
                     resultDiv.appendChild(document.createElement('br'));
                     resultDiv.appendChild(document.createElement('br'));

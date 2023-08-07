@@ -1,0 +1,7 @@
+Make the search button nicer, maybe even do a normal dynamic search bar but I don't want to use too many API calls.
+Logout button could be a real button and in the upper right.
+Maybe Create New List becomes a button with a popup with a text box and an add button.
+Better colors, probably want a non-white background.
+When ranking, have logout in upper right as button still but make back a button with an arrow.
+Figure out a way to make the list display look nicer.
+The row of the dropdown and buttons might end up feeling uglier, probably want to come up with a better UI for that.

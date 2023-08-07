@@ -102,7 +102,7 @@ app.get('/logout', async (req, res) => {
 });
 
 app.post('/userExists', function (req, res) {
-    const username = req.session.username;
+    const username = req.body.user;
     connection.query('SELECT * FROM accounts WHERE username = ?;', [username], function (error, results) {
         if (error) throw error;
         if (results.length > 0) {
@@ -161,7 +161,7 @@ app.post('/deleteList', function (req, res) {
 app.post('/getList', function (req, res) {
     const username = req.session.username;
     const listName = req.body.listName;
-    connection.query('SELECT *, wins - losses AS score FROM lists WHERE username = ? AND list = ? ORDER BY score DESC;', [username, listName], function (error, results) {
+    connection.query('SELECT *, (wins + 1) / (wins + losses + 2) AS score FROM lists WHERE username = ? AND list = ? ORDER BY score DESC;', [username, listName], function (error, results) {
         if (error) throw error;
         res.send(results);
         res.end();
