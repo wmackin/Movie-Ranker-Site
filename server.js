@@ -91,6 +91,10 @@ app.get('/rank.js', (req, res) => {
     res.sendFile('./rank.js', { root: __dirname });
 });
 
+app.get('/rankTop.js', (req, res) => {
+    res.sendFile('./rankTop.js', { root: __dirname });
+});
+
 app.get('/main.css', (req, res) => {
     res.sendFile('./main.css', { root: __dirname });
 });
@@ -118,6 +122,15 @@ app.get('/getUnranked', function (req, res) {
     const username = req.session.username;
     const listName = req.session.list;
     connection.query('SELECT * FROM unranked WHERE username = ? AND list = ? ORDER BY RAND();', [username, listName], function (error, results) {
+        if (error) throw error;
+        res.json(results);
+    });
+});
+
+app.get('/getTopUnranked', function (req, res) {
+    const username = req.session.username;
+    const listName = req.session.list;
+    connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id ORDER BY (((l.wins + 1) / (l.wins + l.losses + 2)) * ((z.wins + 1) / (z.wins + z.losses + 2))) DESC;', [username, listName], function (error, results) {
         if (error) throw error;
         res.json(results);
     });
@@ -350,6 +363,20 @@ app.post('/rankList', async function (req, res) {
     }
 });
 
+app.post('/rankListTop', async function (req, res) {
+    // If the user is loggedin
+    if (req.session.loggedin) {
+        req.session.list = req.body.listName;
+        res.redirect('/rankTop')
+    }
+    else {
+        // Not logged in
+        res.send('Please login to view this page!');
+        res.end();
+    }
+});
+
+
 app.post('/createAccount', async (req, res) => {
     const username = req.body.user;
     const password = req.body.password;
@@ -360,10 +387,14 @@ app.post('/createAccount', async (req, res) => {
     else {
         res.redirect('/signup');
     }
-})
+});
 
 app.get('/rank', (req, res) => {
     res.sendFile(path.join(__dirname + '/rank.html'));
+});
+
+app.get('/rankTop', (req, res) => {
+    res.sendFile(path.join(__dirname + '/rankTop.html'));
 });
 
 app.get('/signup', (req, res) => {

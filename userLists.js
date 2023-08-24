@@ -111,3 +111,18 @@ document.getElementById('rankButton').addEventListener('click', async () => {
         }
     }
 });
+
+document.getElementById('rankTopButton').addEventListener('click', async () => {
+    const listName = document.getElementById('userLists').value;
+    const response = await fetch('/rankListTop', {
+        method: "POST",
+        redirect: 'follow',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listName: listName }),
+    });
+    if (response.ok) {
+        if (response.redirected) {
+            window.location.assign(response.url);
+        }
+    }
+});
