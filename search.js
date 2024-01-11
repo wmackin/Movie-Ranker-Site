@@ -81,6 +81,33 @@ document.getElementById('searchMovie').addEventListener('click', async e => {
                         resultDiv.appendChild(addToList);
                         resultDiv.appendChild(removeFromList);
                         resultDiv.appendChild(errorText);
+                        //poster changer
+                        const posterPrompt = document.createElement('span');
+                        posterPrompt.innerHTML = 'Enter a custom image link for a poster here:'
+                        const posterInput = document.createElement('input');
+                        posterInput.id = id + 'poster';
+                        const posterErrorText = document.createElement('p');
+                        const posterButton = document.createElement('button');
+                        posterButton.innerHTML = "Replace Poster (not visible in search";
+                        posterButton.addEventListener('click', async () => {
+                            const replaceResponse = await fetch('/replacePoster', {
+                                method: "POST",
+                                redirect: 'follow',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    id: id, link: posterInput.value
+                                }),
+                            });
+                            if (replaceResponse.ok) {
+                                const replaceMsg = await replaceResponse.json();
+                                posterErrorText.innerHTML = replaceMsg['msg'];
+                            }
+                        });
+                        resultDiv.appendChild(posterPrompt);
+                        resultDiv.appendChild(posterInput);
+                        resultDiv.appendChild(posterButton);
+                        resultDiv.appendChild(posterErrorText);
+                        //old code (made before poster replacement)
                         resultDiv.appendChild(document.createElement('br'));
                         resultDiv.appendChild(document.createElement('br'));
                         document.getElementById('searchOutput').appendChild(resultDiv);
@@ -131,10 +158,10 @@ document.getElementById('searchID').addEventListener('click', async e => {
                     const heading = document.createElement('h1');
                     heading.innerHTML = `${name} (${year})`;
                     const dropdownCopy = dropdown.cloneNode(true);
-                    const addToList = document.createElement('button');
-                    addToList.innerHTML = 'Add to list';
                     const errorText = document.createElement('p');
                     errorText.class = 'error';
+                    const addToList = document.createElement('button');
+                    addToList.innerHTML = 'Add to list';
                     addToList.addEventListener('click', async () => {
                         const listName = dropdownCopy.options[dropdownCopy.selectedIndex].value;;
                         const addResponse = await fetch('/addToList', {
@@ -176,6 +203,33 @@ document.getElementById('searchID').addEventListener('click', async e => {
                     resultDiv.appendChild(addToList);
                     resultDiv.appendChild(removeFromList);
                     resultDiv.appendChild(errorText);
+                    //poster changer
+                    const posterPrompt = document.createElement('span');
+                    posterPrompt.innerHTML = 'Enter a custom image link for a poster here:'
+                    const posterInput = document.createElement('input');
+                    posterInput.id = id + 'poster';
+                    const posterErrorText = document.createElement('p');
+                    const posterButton = document.createElement('button');
+                    posterButton.innerHTML = "Replace Poster (not visible in search";
+                    posterButton.addEventListener('click', async () => {
+                        const replaceResponse = await fetch('/replacePoster', {
+                            method: "POST",
+                            redirect: 'follow',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                id: id, link: posterInput.value
+                            }),
+                        });
+                        if (replaceResponse.ok) {
+                            const replaceMsg = await replaceResponse.json();
+                            posterErrorText.innerHTML = replaceMsg['msg'];
+                        }
+                    });
+                    resultDiv.appendChild(posterPrompt);
+                    resultDiv.appendChild(posterInput);
+                    resultDiv.appendChild(posterButton);
+                    resultDiv.appendChild(posterErrorText);
+                    //old code (made before poster replacement)
                     resultDiv.appendChild(document.createElement('br'));
                     resultDiv.appendChild(document.createElement('br'));
                     document.getElementById('searchOutput').appendChild(resultDiv);

@@ -95,6 +95,14 @@ app.get('/rankTop.js', (req, res) => {
     res.sendFile('./rankTop.js', { root: __dirname });
 });
 
+app.get('/rankBottom.js', (req, res) => {
+    res.sendFile('./rankBottom.js', { root: __dirname });
+});
+
+app.get('/rankDifference.js', (req, res) => {
+    res.sendFile('./rankDifference.js', { root: __dirname });
+});
+
 app.get('/main.css', (req, res) => {
     res.sendFile('./main.css', { root: __dirname });
 });
@@ -130,7 +138,26 @@ app.get('/getUnranked', function (req, res) {
 app.get('/getTopUnranked', function (req, res) {
     const username = req.session.username;
     const listName = req.session.list;
-    connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id ORDER BY (((l.wins + 1) / (l.wins + l.losses + 2)) * ((z.wins + 1) / (z.wins + z.losses + 2))) DESC;', [username, listName], function (error, results) {
+    // connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id ORDER BY (((l.wins + 1) / (l.wins + l.losses + 2)) * ((z.wins + 1) / (z.wins + z.losses + 2))) DESC;', [username, listName], function (error, results) {
+    connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id ORDER BY LEAST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) DESC;', [username, listName], function (error, results) {
+        if (error) throw error;
+        res.json(results);
+    });
+});
+
+app.get('/getBottomUnranked', function (req, res) {
+    const username = req.session.username;
+    const listName = req.session.list;
+    connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id ORDER BY GREATEST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) ASC;', [username, listName], function (error, results) {
+        if (error) throw error;
+        res.json(results);
+    });
+});
+
+app.get('/getDifferenceUnranked', function (req, res) {
+    const username = req.session.username;
+    const listName = req.session.list;
+    connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id ORDER BY ABS(((l.wins + 1) / (l.wins + l.losses + 2)) - ((z.wins + 1) / (z.wins + z.losses + 2))) DESC;', [username, listName], function (error, results) {
         if (error) throw error;
         res.json(results);
     });
@@ -210,7 +237,7 @@ app.post('/addToList', function (req, res) {
                     }
                 });
             });
-            connection.query('INSERT INTO lists VALUES(?, ?, ?, ?, ?, ?, 0, 0);', [username, listName, id, title, year, poster], function (error, results) {
+            connection.query('INSERT INTO lists VALUES(?, ?, ?, ?, ?, NULL, ?, 0, 0);', [username, listName, id, title, year, poster], function (error, results) {
                 if (error) throw error;
                 res.json({ 'msg': 'Successfully added movie to list.' });
                 res.end();
@@ -286,6 +313,17 @@ app.post('/submitRanking', function (req, res) {
     });
     res.end();
 });
+
+app.post('/replacePoster', function (req, res) {
+    const username = req.session.username;
+    const id = req.body.id;
+    const link = req.body.link;
+    connection.query('UPDATE lists SET poster = ? WHERE username = ? AND id = ?;', [link, username, id], function (error, results) {
+        if (error) throw error;
+        res.json({ 'msg': 'Successfully changed poster.' });
+        res.end();
+    });
+})
 
 //authentication, sourced from https://codeshack.io/basic-login-system-nodejs-express-mysql/
 app.post('/auth', function (req, res) {
@@ -376,6 +414,32 @@ app.post('/rankListTop', async function (req, res) {
     }
 });
 
+app.post('/rankListBottom', async function (req, res) {
+    // If the user is loggedin
+    if (req.session.loggedin) {
+        req.session.list = req.body.listName;
+        res.redirect('/rankBottom')
+    }
+    else {
+        // Not logged in
+        res.send('Please login to view this page!');
+        res.end();
+    }
+});
+
+app.post('/rankListDifference', async function (req, res) {
+    // If the user is loggedin
+    if (req.session.loggedin) {
+        req.session.list = req.body.listName;
+        res.redirect('/rankDifference')
+    }
+    else {
+        // Not logged in
+        res.send('Please login to view this page!');
+        res.end();
+    }
+});
+
 
 app.post('/createAccount', async (req, res) => {
     const username = req.body.user;
@@ -397,6 +461,14 @@ app.get('/rankTop', (req, res) => {
     res.sendFile(path.join(__dirname + '/rankTop.html'));
 });
 
+app.get('/rankBottom', (req, res) => {
+    res.sendFile(path.join(__dirname + '/rankBottom.html'));
+});
+
+app.get('/rankDifference', (req, res) => {
+    res.sendFile(path.join(__dirname + '/rankDifference.html'));
+});
+
 app.get('/signup', (req, res) => {
     res.sendFile(path.join(__dirname + '/signup.html'));
 });
@@ -414,7 +486,7 @@ app.get('/currentUser', (req, res) => {
 });
 
 app.post('/getInfo', (req, res) => {
-    connection.query('SELECT title, year, poster FROM lists WHERE id = ?;', [req.body.id], function (error, results) {
+    connection.query('SELECT title, year, poster FROM lists WHERE id = ? AND username = ?;', [req.body.id, req.session.username], function (error, results) {
         if (error) throw error;
         res.json(results);
     });

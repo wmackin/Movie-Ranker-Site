@@ -5,3 +5,7 @@ Better colors, probably want a non-white background.
 When ranking, have logout in upper right as button still but make back a button with an arrow.
 Figure out a way to make the list display look nicer.
 The row of the dropdown and buttons might end up feeling uglier, probably want to come up with a better UI for that.
+DONE: Should be able to change the posters of movies
+Way to reset rankings
+Maybe integrate top directors and actors
+DONE: Need to updates search.js so imdb id search does the same stuff as the normal search.

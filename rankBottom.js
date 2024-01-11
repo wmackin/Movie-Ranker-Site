@@ -1,7 +1,7 @@
 let id1;
 let id2;
 let unrankedMovies;
-const unrankedResponse = await fetch('/getTopUnranked');
+const unrankedResponse = await fetch('/getBottomUnranked');
 if (unrankedResponse.ok) {
     unrankedMovies = await unrankedResponse.json();
 }
