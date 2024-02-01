@@ -7,5 +7,7 @@ Figure out a way to make the list display look nicer.
 The row of the dropdown and buttons might end up feeling uglier, probably want to come up with a better UI for that.
 DONE: Should be able to change the posters of movies
 Way to reset rankings
-Maybe integrate top directors and actors
+Maybe integrate top directors and actors - issue: API being used doesn't have this incorporated
 DONE: Need to updates search.js so imdb id search does the same stuff as the normal search.
+DONE: Smart ranking
+DONE: Be able to make non-movie lists. Idea, on top of search have a way to add custom items.

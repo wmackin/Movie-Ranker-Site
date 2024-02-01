@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="customItem.js" type="module" defer></script>
+    <title>Movie Ranker</title>
+</head>
+
+<body>
+    <a href="/logout">Logout</a>
+    <br>
+    <a href="/lists">Back</a>
+    <br>
+    <br>
+    <label for="customItem">Or add a custom item name:</label>
+    <input type="text" id="customName">
+    <br><br>
+    <label for="customYr">Year (if applicable):</label>
+    <input type="text" id="customYear">
+    <br><br>
+    <label for="customImage">Image URL</label>
+    <input type="text" id="customImg">
+    <br><br>
+    <label>Select List:</label>
+    <select id="listDropdown"></select>
+    <br><br>
+    <button id="addCustomItem">Add to List</button>
+    <button id="removeCustomItem">Remove from List</button>
+    <p id="errorText"></p>
+</body>
+
+</html>
