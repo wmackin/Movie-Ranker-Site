@@ -18,3 +18,13 @@ img {
 h2 {
     text-align: center;
 }
+
+#logoutLink {
+    display: flex;
+    float: right;
+}
+
+#searchLink {
+    display: flex;
+    float: left;
+}
