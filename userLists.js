@@ -127,47 +127,47 @@ document.getElementById('rankTopButton').addEventListener('click', async () => {
     }
 });
 
-document.getElementById('rankBottomButton').addEventListener('click', async () => {
-    const listName = document.getElementById('userLists').value;
-    const response = await fetch('/rankListBottom', {
-        method: "POST",
-        redirect: 'follow',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listName: listName }),
-    });
-    if (response.ok) {
-        if (response.redirected) {
-            window.location.assign(response.url);
-        }
-    }
-});
+// document.getElementById('rankBottomButton').addEventListener('click', async () => {
+//     const listName = document.getElementById('userLists').value;
+//     const response = await fetch('/rankListBottom', {
+//         method: "POST",
+//         redirect: 'follow',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ listName: listName }),
+//     });
+//     if (response.ok) {
+//         if (response.redirected) {
+//             window.location.assign(response.url);
+//         }
+//     }
+// });
 
-document.getElementById('rankDifferenceButton').addEventListener('click', async () => {
-    const listName = document.getElementById('userLists').value;
-    const response = await fetch('/rankListDifference', {
-        method: "POST",
-        redirect: 'follow',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listName: listName }),
-    });
-    if (response.ok) {
-        if (response.redirected) {
-            window.location.assign(response.url);
-        }
-    }
-});
+// document.getElementById('rankDifferenceButton').addEventListener('click', async () => {
+//     const listName = document.getElementById('userLists').value;
+//     const response = await fetch('/rankListDifference', {
+//         method: "POST",
+//         redirect: 'follow',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ listName: listName }),
+//     });
+//     if (response.ok) {
+//         if (response.redirected) {
+//             window.location.assign(response.url);
+//         }
+//     }
+// });
 
-document.getElementById('rankNewestButton').addEventListener('click', async () => {
-    const listName = document.getElementById('userLists').value;
-    const response = await fetch('/rankListNewest', {
-        method: "POST",
-        redirect: 'follow',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listName: listName }),
-    });
-    if (response.ok) {
-        if (response.redirected) {
-            window.location.assign(response.url);
-        }
-    }
-});
+// document.getElementById('rankNewestButton').addEventListener('click', async () => {
+//     const listName = document.getElementById('userLists').value;
+//     const response = await fetch('/rankListNewest', {
+//         method: "POST",
+//         redirect: 'follow',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ listName: listName }),
+//     });
+//     if (response.ok) {
+//         if (response.redirected) {
+//             window.location.assign(response.url);
+//         }
+//     }
+// });

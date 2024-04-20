@@ -91,22 +91,6 @@ app.get('/rank.js', (req, res) => {
     res.sendFile('./rank.js', { root: __dirname });
 });
 
-app.get('/rankTop.js', (req, res) => {
-    res.sendFile('./rankTop.js', { root: __dirname });
-});
-
-app.get('/rankBottom.js', (req, res) => {
-    res.sendFile('./rankBottom.js', { root: __dirname });
-});
-
-app.get('/rankDifference.js', (req, res) => {
-    res.sendFile('./rankDifference.js', { root: __dirname });
-});
-
-app.get('/rankNewest.js', (req, res) => {
-    res.sendFile('./rankNewest.js', { root: __dirname });
-});
-
 app.get('/customItem.js', (req, res) => {
     res.sendFile('./customItem.js', { root: __dirname });
 });
@@ -134,59 +118,24 @@ app.post('/userExists', function (req, res) {
     });
 });
 
-app.get('/getUnranked', function (req, res) {
+app.post('/getUnranked', function (req, res) {
     const username = req.session.username;
     const listName = req.session.list;
-    connection.query('SELECT * FROM unranked WHERE username = ? AND list = ? ORDER BY RAND();', [username, listName], function (error, results) {
-        if (error) throw error;
-        res.json(results);
-    });
-});
-
-app.post('/getTopUnranked', function (req, res) {
-    console.log('got');
-    const username = req.session.username;
-    const listName = req.session.list;
-    const pct = req.body.pct;
-    // connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id ORDER BY (((l.wins + 1) / (l.wins + l.losses + 2)) * ((z.wins + 1) / (z.wins + z.losses + 2))) DESC;', [username, listName], function (error, results) {
-    // connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id ORDER BY LEAST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) DESC, GREATEST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) DESC;', [username, listName], function (error, results) {
-        connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id AND ((l.wins + 1) / (l.wins + l.losses + 2)) >= ? AND ((z.wins + 1) / (z.wins + z.losses + 2)) >= ? ORDER BY LEAST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) DESC, GREATEST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) DESC;', [username, listName, pct, pct], function (error, results) {
-        if (error) throw error;
-        res.json(results);
-    });
-});
-
-app.get('/getBottomUnranked', function (req, res) {
-    const username = req.session.username;
-    const listName = req.session.list;
-    connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id ORDER BY GREATEST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) ASC, LEAST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) ASC;', [username, listName], function (error, results) {
-        if (error) throw error;
-        res.json(results);
-    });
-});
-
-app.get('/getNewestUnranked', function (req, res) {
-    const username = req.session.username;
-    const listName = req.session.list;
-    connection.query('SELECT id FROM rankings.lists WHERE username = ? AND list = ? ORDER BY wins + losses ASC', [username, listName], function (error, results) {
-        if (error) throw error;
-        const itemID = results[0].id;
-        connection.query('SELECT username, list, id1, id2 FROM rankings.unranked WHERE username = ? AND list = ? AND (id1 = ? OR id2 = ?) ORDER BY RAND();', [username, listName, itemID, itemID], function (error, results) {
+    const rankType = req.session.rankType;
+    if (rankType === 'standard') {
+        connection.query('SELECT * FROM unranked WHERE username = ? AND list = ? ORDER BY RAND();', [username, listName], function (error, results) {
             if (error) throw error;
             res.json(results);
         });
-    });
+    }
+    else if (rankType === 'top') {
+        const pct = req.body.pct;
+        connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id AND ((l.wins + 1) / (l.wins + l.losses + 2)) >= ? AND ((z.wins + 1) / (z.wins + z.losses + 2)) >= ? ORDER BY LEAST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) DESC, GREATEST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) DESC;', [username, listName, pct, pct], function (error, results) {
+            if (error) throw error;
+            res.json(results);
+        });
+    }
 });
-
-app.get('/getDifferenceUnranked', function (req, res) {
-    const username = req.session.username;
-    const listName = req.session.list;
-    connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id ORDER BY ABS(((l.wins + 1) / (l.wins + l.losses + 2)) - ((z.wins + 1) / (z.wins + z.losses + 2))) DESC;', [username, listName], function (error, results) {
-        if (error) throw error;
-        res.json(results);
-    });
-});
-
 app.get('/userLists', function (req, res) {
     const username = req.session.username;
     connection.query('SELECT list FROM list_names WHERE username = ?;', [username], function (error, results) {
@@ -615,46 +564,6 @@ app.post('/rankListTop', async function (req, res) {
     }
 });
 
-app.post('/rankListBottom', async function (req, res) {
-    // If the user is loggedin
-    if (req.session.loggedin) {
-        req.session.list = req.body.listName;
-        res.redirect('/rankBottom')
-    }
-    else {
-        // Not logged in
-        res.send('Please login to view this page!');
-        res.end();
-    }
-});
-
-app.post('/rankListDifference', async function (req, res) {
-    // If the user is loggedin
-    if (req.session.loggedin) {
-        req.session.list = req.body.listName;
-        res.redirect('/rankDifference')
-    }
-    else {
-        // Not logged in
-        res.send('Please login to view this page!');
-        res.end();
-    }
-});
-
-app.post('/rankListNewest', async function (req, res) {
-    // If the user is loggedin
-    if (req.session.loggedin) {
-        req.session.list = req.body.listName;
-        res.redirect('/rankNewest')
-    }
-    else {
-        // Not logged in
-        res.send('Please login to view this page!');
-        res.end();
-    }
-});
-
-
 app.post('/createAccount', async (req, res) => {
     const username = req.body.user;
     const password = req.body.password;
@@ -668,23 +577,13 @@ app.post('/createAccount', async (req, res) => {
 });
 
 app.get('/rank', (req, res) => {
+    req.session.rankType = 'standard';
     res.sendFile(path.join(__dirname + '/rank.html'));
 });
 
 app.get('/rankTop', (req, res) => {
-    res.sendFile(path.join(__dirname + '/rankTop.html'));
-});
-
-app.get('/rankBottom', (req, res) => {
-    res.sendFile(path.join(__dirname + '/rankBottom.html'));
-});
-
-app.get('/rankDifference', (req, res) => {
-    res.sendFile(path.join(__dirname + '/rankDifference.html'));
-});
-
-app.get('/rankNewest', (req, res) => {
-    res.sendFile(path.join(__dirname + '/rankNewest.html'));
+    req.session.rankType = 'top';
+    res.sendFile(path.join(__dirname + '/rank.html'));
 });
 
 app.get('/signup', (req, res) => {

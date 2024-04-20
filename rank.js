@@ -1,13 +1,30 @@
 let id1;
 let id2;
 let unrankedMovies;
-const unrankedResponse = await fetch('/getUnranked');
-if (unrankedResponse.ok) {
-    unrankedMovies = await unrankedResponse.json();
-}
 getTwoMovies();
 
 async function getTwoMovies() {
+    let pct = 0.9;
+    while (pct >= 0) {
+        console.log(pct);
+        const unrankedResponse = await fetch('/getUnranked', {
+            method: "POST",
+            redirect: 'follow',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                pct: pct
+            }),
+        });
+        if (unrankedResponse.ok) {
+            unrankedMovies = await unrankedResponse.json();
+            if (unrankedMovies.length === 0) {
+                pct -= 0.1;
+            }
+            else {
+                break;
+            }
+        }
+    }
     if (unrankedMovies.length === 0) {
         document.getElementById('outOfMovies').innerHTML = 'Out of Movies';
         const rankingSection = document.getElementById('rankingsection');
@@ -76,7 +93,6 @@ if (document.getElementById('movieButton1') !== undefined) {
                 id2: id2
             }),
         });
-        unrankedMovies.shift();
         getTwoMovies();
     })
 }
@@ -94,7 +110,6 @@ if (document.getElementById('movieButton2') !== undefined) {
                 id2: id2
             }),
         });
-        unrankedMovies.shift();
         getTwoMovies();
     })
 }
@@ -117,14 +132,7 @@ if (document.getElementById('smartWin1') !== undefined) {
             }),
         });
         if (response.ok) {
-            const newUnrankedResponse = await fetch('/getUnranked');
-            if (newUnrankedResponse.ok) {
-                const newUnrankedMovies = await newUnrankedResponse.json();
-                unrankedMovies.shift()
-                const newUnrankedMoviesSet = new Set(newUnrankedMovies.map(y => JSON.stringify(y)));
-                unrankedMovies = unrankedMovies.filter(x => {return newUnrankedMoviesSet.has(JSON.stringify(x))});
-                getTwoMovies();
-            }
+            getTwoMovies();
         }
     })
 }
@@ -147,14 +155,7 @@ if (document.getElementById('smartWin2') !== undefined) {
             }),
         });
         if (response.ok) {
-            const newUnrankedResponse = await fetch('/getUnranked');
-            if (newUnrankedResponse.ok) {
-                const newUnrankedMovies = await newUnrankedResponse.json();
-                unrankedMovies.shift()
-                const newUnrankedMoviesSet = new Set(newUnrankedMovies.map(y => JSON.stringify(y)));
-                unrankedMovies = unrankedMovies.filter(x => {return newUnrankedMoviesSet.has(JSON.stringify(x))});
-                getTwoMovies();
-            }
+            getTwoMovies();
         }
     });
 }
