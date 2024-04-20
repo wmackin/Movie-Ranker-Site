@@ -1,13 +1,17 @@
 let id1;
 let id2;
 let unrankedMovies;
-const unrankedResponse = await fetch('/getUnranked');
+const unrankedResponse = await fetch('/getNewestUnranked');
 if (unrankedResponse.ok) {
     unrankedMovies = await unrankedResponse.json();
 }
 getTwoMovies();
 
 async function getTwoMovies() {
+    const unrankedResponse = await fetch('/getNewestUnranked');
+    if (unrankedResponse.ok) {
+        unrankedMovies = await unrankedResponse.json();
+    }
     if (unrankedMovies.length === 0) {
         document.getElementById('outOfMovies').innerHTML = 'Out of Movies';
         const rankingSection = document.getElementById('rankingsection');
@@ -99,6 +103,13 @@ if (document.getElementById('movieButton2') !== undefined) {
     })
 }
 
+if (document.getElementById('skipButton') !== undefined) {
+    document.getElementById('skipButton').addEventListener('click', async () => {
+        unrankedMovies.shift();
+        getTwoMovies();
+    })
+}
+
 if (document.getElementById('smartWin1') !== undefined) {
     document.getElementById('smartWin1').addEventListener('click', async () => {
         document.getElementById('movieTitle1').innerHTML = '';
@@ -122,7 +133,7 @@ if (document.getElementById('smartWin1') !== undefined) {
                 const newUnrankedMovies = await newUnrankedResponse.json();
                 unrankedMovies.shift()
                 const newUnrankedMoviesSet = new Set(newUnrankedMovies.map(y => JSON.stringify(y)));
-                unrankedMovies = unrankedMovies.filter(x => {return newUnrankedMoviesSet.has(JSON.stringify(x))});
+                unrankedMovies = unrankedMovies.filter(x => { return newUnrankedMoviesSet.has(JSON.stringify(x)) });
                 getTwoMovies();
             }
         }
@@ -152,7 +163,7 @@ if (document.getElementById('smartWin2') !== undefined) {
                 const newUnrankedMovies = await newUnrankedResponse.json();
                 unrankedMovies.shift()
                 const newUnrankedMoviesSet = new Set(newUnrankedMovies.map(y => JSON.stringify(y)));
-                unrankedMovies = unrankedMovies.filter(x => {return newUnrankedMoviesSet.has(JSON.stringify(x))});
+                unrankedMovies = unrankedMovies.filter(x => { return newUnrankedMoviesSet.has(JSON.stringify(x)) });
                 getTwoMovies();
             }
         }

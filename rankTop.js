@@ -1,13 +1,34 @@
 let id1;
 let id2;
 let unrankedMovies;
-const unrankedResponse = await fetch('/getTopUnranked');
-if (unrankedResponse.ok) {
-    unrankedMovies = await unrankedResponse.json();
-}
+// const unrankedResponse = await fetch('/getTopUnranked');
+// if (unrankedResponse.ok) {
+//     unrankedMovies = await unrankedResponse.json();
+// }
 getTwoMovies();
 
 async function getTwoMovies() {
+    let pct = 0.9;
+    while (pct >= 0) {
+        console.log(pct);
+        const unrankedResponse = await fetch('/getTopUnranked', {
+            method: "POST",
+            redirect: 'follow',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                pct: pct
+            }),
+        });
+        if (unrankedResponse.ok) {
+            unrankedMovies = await unrankedResponse.json();
+            if (unrankedMovies.length === 0) {
+                pct -= 0.1;
+            }
+            else {
+                break;
+            }
+        }
+    }
     if (unrankedMovies.length === 0) {
         document.getElementById('outOfMovies').innerHTML = 'Out of Movies';
         const rankingSection = document.getElementById('rankingsection');
@@ -65,6 +86,10 @@ async function getTwoMovies() {
 
 if (document.getElementById('movieButton1') !== undefined) {
     document.getElementById('movieButton1').addEventListener('click', async () => {
+        document.getElementById('movieTitle1').innerHTML = '';
+        document.getElementById('movieTitle2').innerHTML = '';
+        document.getElementById('poster1').src = '';
+        document.getElementById('poster2').src = '';
         await fetch('/submitRanking', {
             method: "POST",
             redirect: 'follow',
@@ -83,6 +108,10 @@ if (document.getElementById('movieButton1') !== undefined) {
 
 if (document.getElementById('movieButton2') !== undefined) {
     document.getElementById('movieButton2').addEventListener('click', async () => {
+        document.getElementById('movieTitle1').innerHTML = '';
+        document.getElementById('movieTitle2').innerHTML = '';
+        document.getElementById('poster1').src = '';
+        document.getElementById('poster2').src = '';
         await fetch('/submitRanking', {
             method: "POST",
             redirect: 'follow',
@@ -108,6 +137,10 @@ if (document.getElementById('skipButton') !== undefined) {
 
 if (document.getElementById('smartWin1') !== undefined) {
     document.getElementById('smartWin1').addEventListener('click', async () => {
+        document.getElementById('movieTitle1').innerHTML = '';
+        document.getElementById('movieTitle2').innerHTML = '';
+        document.getElementById('poster1').src = '';
+        document.getElementById('poster2').src = '';
         const response = await fetch('/submitSmartRanking', {
             method: "POST",
             redirect: 'follow',
@@ -120,20 +153,24 @@ if (document.getElementById('smartWin1') !== undefined) {
             }),
         });
         if (response.ok) {
-            const newUnrankedResponse = await fetch('/getUnranked');
-            if (newUnrankedResponse.ok) {
-                const newUnrankedMovies = await newUnrankedResponse.json();
-                unrankedMovies.shift()
-                const newUnrankedMoviesSet = new Set(newUnrankedMovies.map(y => JSON.stringify(y)));
-                unrankedMovies = unrankedMovies.filter(x => {return newUnrankedMoviesSet.has(JSON.stringify(x))});
+            // const newUnrankedResponse = await fetch('/getUnranked');
+            // if (newUnrankedResponse.ok) {
+            //     const newUnrankedMovies = await newUnrankedResponse.json();
+            //     unrankedMovies.shift()
+            //     const newUnrankedMoviesSet = new Set(newUnrankedMovies.map(y => JSON.stringify(y)));
+            //     unrankedMovies = unrankedMovies.filter(x => { return newUnrankedMoviesSet.has(JSON.stringify(x)) });
                 getTwoMovies();
-            }
+            // }
         }
-    })
+    });
 }
 
 if (document.getElementById('smartWin2') !== undefined) {
     document.getElementById('smartWin2').addEventListener('click', async () => {
+        document.getElementById('movieTitle1').innerHTML = '';
+        document.getElementById('movieTitle2').innerHTML = '';
+        document.getElementById('poster1').src = '';
+        document.getElementById('poster2').src = '';
         const response = await fetch('/submitSmartRanking', {
             method: "POST",
             redirect: 'follow',
@@ -146,14 +183,14 @@ if (document.getElementById('smartWin2') !== undefined) {
             }),
         });
         if (response.ok) {
-            const newUnrankedResponse = await fetch('/getUnranked');
-            if (newUnrankedResponse.ok) {
-                const newUnrankedMovies = await newUnrankedResponse.json();
-                unrankedMovies.shift()
-                const newUnrankedMoviesSet = new Set(newUnrankedMovies.map(y => JSON.stringify(y)));
-                unrankedMovies = unrankedMovies.filter(x => {return newUnrankedMoviesSet.has(JSON.stringify(x))});
+            // const newUnrankedResponse = await fetch('/getUnranked');
+            // if (newUnrankedResponse.ok) {
+            //     const newUnrankedMovies = await newUnrankedResponse.json();
+            //     unrankedMovies.shift()
+            //     const newUnrankedMoviesSet = new Set(newUnrankedMovies.map(y => JSON.stringify(y)));
+            //     unrankedMovies = unrankedMovies.filter(x => { return newUnrankedMoviesSet.has(JSON.stringify(x)) });
                 getTwoMovies();
-            }
+            // }
         }
     });
 }

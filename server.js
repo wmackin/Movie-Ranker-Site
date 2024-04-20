@@ -103,6 +103,10 @@ app.get('/rankDifference.js', (req, res) => {
     res.sendFile('./rankDifference.js', { root: __dirname });
 });
 
+app.get('/rankNewest.js', (req, res) => {
+    res.sendFile('./rankNewest.js', { root: __dirname });
+});
+
 app.get('/customItem.js', (req, res) => {
     res.sendFile('./customItem.js', { root: __dirname });
 });
@@ -139,11 +143,14 @@ app.get('/getUnranked', function (req, res) {
     });
 });
 
-app.get('/getTopUnranked', function (req, res) {
+app.post('/getTopUnranked', function (req, res) {
+    console.log('got');
     const username = req.session.username;
     const listName = req.session.list;
+    const pct = req.body.pct;
     // connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id ORDER BY (((l.wins + 1) / (l.wins + l.losses + 2)) * ((z.wins + 1) / (z.wins + z.losses + 2))) DESC;', [username, listName], function (error, results) {
-    connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id ORDER BY LEAST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) DESC;', [username, listName], function (error, results) {
+    // connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id ORDER BY LEAST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) DESC, GREATEST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) DESC;', [username, listName], function (error, results) {
+        connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id AND ((l.wins + 1) / (l.wins + l.losses + 2)) >= ? AND ((z.wins + 1) / (z.wins + z.losses + 2)) >= ? ORDER BY LEAST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) DESC, GREATEST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) DESC;', [username, listName, pct, pct], function (error, results) {
         if (error) throw error;
         res.json(results);
     });
@@ -152,9 +159,22 @@ app.get('/getTopUnranked', function (req, res) {
 app.get('/getBottomUnranked', function (req, res) {
     const username = req.session.username;
     const listName = req.session.list;
-    connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id ORDER BY GREATEST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) ASC;', [username, listName], function (error, results) {
+    connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id ORDER BY GREATEST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) ASC, LEAST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) ASC;', [username, listName], function (error, results) {
         if (error) throw error;
         res.json(results);
+    });
+});
+
+app.get('/getNewestUnranked', function (req, res) {
+    const username = req.session.username;
+    const listName = req.session.list;
+    connection.query('SELECT id FROM rankings.lists WHERE username = ? AND list = ? ORDER BY wins + losses ASC', [username, listName], function (error, results) {
+        if (error) throw error;
+        const itemID = results[0].id;
+        connection.query('SELECT username, list, id1, id2 FROM rankings.unranked WHERE username = ? AND list = ? AND (id1 = ? OR id2 = ?) ORDER BY RAND();', [username, listName, itemID, itemID], function (error, results) {
+            if (error) throw error;
+            res.json(results);
+        });
     });
 });
 
@@ -388,34 +408,54 @@ app.post('/submitSmartRanking', async function (req, res) {
                                 queue.shift();
                             };
                             //at this point, have the winner beat any descendants it has not yet gone against
+                            //utilized chatgpt to rewrite the function to ensure all SQL statements ran before returning
                             async function winOverDescendants() {
-                                newLosers = Array.from(newLosers);
-                                newLosers.forEach(l => {
-                                    connection.query('SELECT COUNT(*) FROM rankings WHERE username = ? AND list = ? AND ((winner = ? AND loser = ?) OR (loser = ? AND winner = ?));', [username, listName, winner, l, winner, l], function (error, results) {
-                                        if (error) throw error;
-                                        if (results[0]['COUNT(*)'] == 0) {
-                                            connection.query('SELECT COUNT(*) FROM smart_rankings WHERE username = ? AND list = ? AND ((winner = ? AND loser = ?) OR (loser = ? AND winner = ?));', [username, listName, winner, l, winner, l], function (error, results) {
-                                                if (error) throw error;
+                                return new Promise((resolve, reject) => {
+                                    newLosers = Array.from(newLosers);
+                                    let promises = [];
+                                    newLosers.forEach(l => {
+                                        let promise = new Promise((innerResolve, innerReject) => {
+                                            connection.query('SELECT COUNT(*) FROM rankings WHERE username = ? AND list = ? AND ((winner = ? AND loser = ?) OR (loser = ? AND winner = ?));', [username, listName, winner, l, winner, l], function (error, results) {
+                                                if (error) return innerReject(error);
                                                 if (results[0]['COUNT(*)'] == 0) {
-                                                    connection.query('INSERT INTO smart_rankings VALUES(?, ?, ?, ?);', [username, listName, winner, l], function (error, results) {
-                                                        if (error) throw error;
-                                                        connection.query('DELETE FROM unranked WHERE username = ? AND list = ? AND ((id1 = ? AND id2 = ?) OR (id2 = ? AND id1 = ?));', [username, listName, winner, l, winner, l], function (error, results) {
-                                                            if (error) throw error;
-                                                            connection.query('UPDATE lists SET wins = wins + 1 WHERE username = ? AND list = ? and id = ?;', [username, listName, winner], function (error, results) {
-                                                                if (error) throw error;
-                                                                connection.query('UPDATE lists SET losses = losses + 1 WHERE username = ? AND list = ? and id = ?;', [username, listName, l], function (error, results) {
-                                                                    if (error) throw error;
+                                                    connection.query('SELECT COUNT(*) FROM smart_rankings WHERE username = ? AND list = ? AND ((winner = ? AND loser = ?) OR (loser = ? AND winner = ?));', [username, listName, winner, l, winner, l], function (error, results) {
+                                                        if (error) return innerReject(error);
+                                                        if (results[0]['COUNT(*)'] == 0) {
+                                                            connection.query('INSERT INTO smart_rankings VALUES(?, ?, ?, ?);', [username, listName, winner, l], function (error, results) {
+                                                                if (error) return innerReject(error);
+                                                                connection.query('DELETE FROM unranked WHERE username = ? AND list = ? AND ((id1 = ? AND id2 = ?) OR (id2 = ? AND id1 = ?));', [username, listName, winner, l, winner, l], function (error, results) {
+                                                                    if (error) return innerReject(error);
+                                                                    connection.query('UPDATE lists SET wins = wins + 1 WHERE username = ? AND list = ? and id = ?;', [username, listName, winner], function (error, results) {
+                                                                        if (error) return innerReject(error);
+                                                                        connection.query('UPDATE lists SET losses = losses + 1 WHERE username = ? AND list = ? and id = ?;', [username, listName, l], function (error, results) {
+                                                                            if (error) return innerReject(error);
+                                                                            innerResolve(); // Resolve the promise when all queries are successful
+                                                                        });
+                                                                    });
                                                                 });
                                                             });
-                                                        });
+                                                        } else {
+                                                            innerResolve(); // Resolve the promise if smart_rankings already has a record
+                                                        }
                                                     });
+                                                } else {
+                                                    innerResolve(); // Resolve the promise if rankings already has a record
                                                 }
                                             });
-                                        }
+                                        });
+                                        promises.push(promise);
                                     });
+
+                                    Promise.all(promises)
+                                        .then(() => {
+                                            resolve(); // Resolve the main promise when all queries are successful
+                                        })
+                                        .catch(error => {
+                                            reject(error); // Reject the main promise if any query fails
+                                        });
                                 });
                             }
-                            const A = await winOverDescendants();
+                            await winOverDescendants();
                             //now let's find all parents of the winner
                             let newWinners = new Set();
                             queue = loserGraph[winner];
@@ -431,35 +471,41 @@ app.post('/submitSmartRanking', async function (req, res) {
                                 queue.shift();
                             };
                             //at this point, have the loser lose to any parents it has not yet gone against
+                            //utilized chatgpt to rewrite the function to ensure all SQL statements ran before returning
                             async function loseToParents() {
                                 newWinners = Array.from(newWinners);
-                                await newWinners.forEach(async w => {
-                                    await connection.query('SELECT COUNT(*) FROM rankings WHERE username = ? AND list = ? AND ((winner = ? AND loser = ?) OR (loser = ? AND winner = ?));', [username, listName, w, loser, w, loser], async function (error, results) {
-                                        if (error) throw error;
-                                        if (results[0]['COUNT(*)'] == 0) {
-                                            await connection.query('SELECT COUNT(*) FROM smart_rankings WHERE username = ? AND list = ? AND ((winner = ? AND loser = ?) OR (loser = ? AND winner = ?));', [username, listName, w, loser, w, loser], async function (error, results) {
-                                                if (error) throw error;
-                                                if (results[0]['COUNT(*)'] == 0) {
-                                                    await connection.query('INSERT INTO smart_rankings VALUES(?, ?, ?, ?);', [username, listName, w, loser], async function (error, results) {
-                                                        if (error) throw error;
-                                                        await connection.query('DELETE FROM unranked WHERE username = ? AND list = ? AND ((id1 = ? AND id2 = ?) OR (id2 = ? AND id1 = ?));', [username, listName, w, loser, w, loser], async function (error, results) {
-                                                            if (error) throw error;
-                                                            await connection.query('UPDATE lists SET wins = wins + 1 WHERE username = ? AND list = ? and id = ?;', [username, listName, w], async function (error, results) {
-                                                                if (error) throw error;
-                                                                await connection.query('UPDATE lists SET losses = losses + 1 WHERE username = ? AND list = ? and id = ?;', [username, listName, loser], function (error, results) {
-                                                                    if (error) throw error;
-                                                                });
-                                                            });
-                                                        });
-                                                    });
-                                                }
-                                            });
+
+                                for (const w of newWinners) {
+                                    try {
+                                        const rankingsCount = await queryPromise('SELECT COUNT(*) FROM rankings WHERE username = ? AND list = ? AND ((winner = ? AND loser = ?) OR (loser = ? AND winner = ?));', [username, listName, w, loser, w, loser]);
+                                        if (rankingsCount[0]['COUNT(*)'] == 0) {
+                                            const smartRankingsCount = await queryPromise('SELECT COUNT(*) FROM smart_rankings WHERE username = ? AND list = ? AND ((winner = ? AND loser = ?) OR (loser = ? AND winner = ?));', [username, listName, w, loser, w, loser]);
+                                            if (smartRankingsCount[0]['COUNT(*)'] == 0) {
+                                                await queryPromise('INSERT INTO smart_rankings VALUES(?, ?, ?, ?);', [username, listName, w, loser]);
+                                                await queryPromise('DELETE FROM unranked WHERE username = ? AND list = ? AND ((id1 = ? AND id2 = ?) OR (id2 = ? AND id1 = ?));', [username, listName, w, loser, w, loser]);
+                                                await queryPromise('UPDATE lists SET wins = wins + 1 WHERE username = ? AND list = ? and id = ?;', [username, listName, w]);
+                                                await queryPromise('UPDATE lists SET losses = losses + 1 WHERE username = ? AND list = ? and id = ?;', [username, listName, loser]);
+                                            }
+                                        }
+                                    } catch (error) {
+                                        throw error;
+                                    }
+                                }
+
+                                return { ok: true }; // Return an object indicating success
+                            }
+                            function queryPromise(sql, values) {
+                                return new Promise((resolve, reject) => {
+                                    connection.query(sql, values, (error, results) => {
+                                        if (error) {
+                                            reject(error);
+                                        } else {
+                                            resolve(results);
                                         }
                                     });
                                 });
-                                return 1;
                             }
-                            const B = await loseToParents();
+                            await loseToParents();
                             res.end();
                         });
                     });
@@ -595,6 +641,19 @@ app.post('/rankListDifference', async function (req, res) {
     }
 });
 
+app.post('/rankListNewest', async function (req, res) {
+    // If the user is loggedin
+    if (req.session.loggedin) {
+        req.session.list = req.body.listName;
+        res.redirect('/rankNewest')
+    }
+    else {
+        // Not logged in
+        res.send('Please login to view this page!');
+        res.end();
+    }
+});
+
 
 app.post('/createAccount', async (req, res) => {
     const username = req.body.user;
@@ -622,6 +681,10 @@ app.get('/rankBottom', (req, res) => {
 
 app.get('/rankDifference', (req, res) => {
     res.sendFile(path.join(__dirname + '/rankDifference.html'));
+});
+
+app.get('/rankNewest', (req, res) => {
+    res.sendFile(path.join(__dirname + '/rankNewest.html'));
 });
 
 app.get('/signup', (req, res) => {
