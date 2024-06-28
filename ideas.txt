@@ -12,5 +12,6 @@ DONE: Need to updates search.js so imdb id search does the same stuff as the nor
 DONE: Smart ranking
 DONE: Be able to make non-movie lists. Idea, on top of search have a way to add custom items.
 Dropdown for ranking type
-Ranking option for "newest", selecting the movie with fewest rankings
-Replace rank top with just fetching where winning percents over .9 or something? Then do iterative deepening.
+DONE Ranking option for "newest", selecting the movie with fewest rankings
+DONE Replace rank top with just fetching where winning percents over .9 or something? Then do iterative deepening.
+Rename list

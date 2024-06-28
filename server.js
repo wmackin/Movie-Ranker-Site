@@ -331,13 +331,14 @@ app.post('/submitSmartRanking', async function (req, res) {
                     let loserGraph = {}; //keys are loser, values are winner
                     connection.query('SELECT * FROM lists WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
                         if (error) throw error;
+                        console.log(results);
                         results.forEach(r => {
                             winnerGraph[r.id] = [];
                             loserGraph[r.id] = [];
                         });
-
                         connection.query('SELECT winner, loser FROM smart_rankings WHERE username = ? AND list = ?;', [username, listName], async function (error, results) {
                             if (error) throw error;
+                            console.log(results);
                             results.forEach(r => {
                                 winnerGraph[r.winner].push(r.loser);
                                 loserGraph[r.loser].push(r.winner);
@@ -356,6 +357,7 @@ app.post('/submitSmartRanking', async function (req, res) {
                                 });
                                 queue.shift();
                             };
+                            
                             //at this point, have the winner beat any descendants it has not yet gone against
                             //utilized chatgpt to rewrite the function to ensure all SQL statements ran before returning
                             async function winOverDescendants() {
@@ -440,7 +442,6 @@ app.post('/submitSmartRanking', async function (req, res) {
                                         throw error;
                                     }
                                 }
-
                                 return { ok: true }; // Return an object indicating success
                             }
                             function queryPromise(sql, values) {
@@ -473,6 +474,10 @@ app.post('/replacePoster', function (req, res) {
         res.json({ 'msg': 'Successfully changed poster.' });
         res.end();
     });
+});
+
+app.get('/rankType', function(req, res) {
+    res.json({'type': req.session.rankType});
 })
 
 //authentication, sourced from https://codeshack.io/basic-login-system-nodejs-express-mysql/

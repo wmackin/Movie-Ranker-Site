@@ -1,29 +1,42 @@
 let id1;
 let id2;
 let unrankedMovies;
+let rankType;
+
+const typeResponse = await fetch('/rankType');
+if (typeResponse.ok) {
+    const typeJSON = await typeResponse.json();
+    rankType = typeJSON['type'];
+}
+
 getTwoMovies();
 
 async function getTwoMovies() {
-    let pct = 0.9;
-    while (pct >= 0) {
-        console.log(pct);
-        const unrankedResponse = await fetch('/getUnranked', {
-            method: "POST",
-            redirect: 'follow',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                pct: pct
-            }),
-        });
-        if (unrankedResponse.ok) {
-            unrankedMovies = await unrankedResponse.json();
-            if (unrankedMovies.length === 0) {
-                pct -= 0.1;
-            }
-            else {
-                break;
+    if (rankType === 'top' || unrankedMovies === undefined) {
+        let pct = 0.9;
+        while (pct >= 0) {
+            console.log(pct);
+            const unrankedResponse = await fetch('/getUnranked', {
+                method: "POST",
+                redirect: 'follow',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pct: pct
+                }),
+            });
+            if (unrankedResponse.ok) {
+                unrankedMovies = await unrankedResponse.json();
+                if (unrankedMovies.length === 0) {
+                    pct -= 0.1;
+                }
+                else {
+                    break;
+                }
             }
         }
+    }
+    else {
+        unrankedMovies.shift();
     }
     if (unrankedMovies.length === 0) {
         document.getElementById('outOfMovies').innerHTML = 'Out of Movies';
