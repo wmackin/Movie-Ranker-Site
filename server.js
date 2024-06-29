@@ -153,6 +153,48 @@ app.post('/createList', function (req, res) {
     })
 });
 
+app.post('/resetList', function (req, res) {
+    const username = req.session.username;
+    const listName = req.body.listName;
+    connection.query('UPDATE lists SET wins = 0, losses = 0 WHERE username = ? and list = ?;', [username, listName], function (error, results) {
+        if (error) throw error;
+    });
+    connection.query('DELETE FROM rankings WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
+        if (error) throw error;
+    });
+    connection.query('DELETE FROM smart_rankings WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
+        if (error) throw error;
+    });
+    connection.query('SELECT id FROM lists WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
+        if (error) throw error;
+        const items = results;
+        connection.query('SELECT id1, id2 FROM unranked WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
+            if (error) throw error;
+            let unrankedPairs = new Set()
+            results.forEach(r => {
+                unrankedPairs.add(r['id1'] + r['id2']);
+                unrankedPairs.add(r['id2'] + r['id1']);
+            });
+            for (let i = 0; i < items.length; i++) {
+                for (let j = i+1; j < items.length; j++) {
+                    if (!unrankedPairs.has(items[i]['id'] + items[j]['id'])) {
+                        if (Math.random() < 0.5) {
+                            connection.query('INSERT INTO unranked VALUES(?, ?, ?, ?);', [username, listName, items[i]['id'], items[j]['id']], function (error, results) {
+                                if (error) throw error;
+                            });
+                        }
+                        else {
+                            connection.query('INSERT INTO unranked VALUES(?, ?, ?, ?);', [username, listName, items[j]['id'], items[i]['id']], function (error, results) {
+                                if (error) throw error;
+                            });
+                        }
+                    }
+                }
+            }
+        });
+    });
+});
+
 app.post('/deleteList', function (req, res) {
     const username = req.session.username;
     const listName = req.body.listName;
@@ -331,14 +373,12 @@ app.post('/submitSmartRanking', async function (req, res) {
                     let loserGraph = {}; //keys are loser, values are winner
                     connection.query('SELECT * FROM lists WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
                         if (error) throw error;
-                        console.log(results);
                         results.forEach(r => {
                             winnerGraph[r.id] = [];
                             loserGraph[r.id] = [];
                         });
                         connection.query('SELECT winner, loser FROM smart_rankings WHERE username = ? AND list = ?;', [username, listName], async function (error, results) {
                             if (error) throw error;
-                            console.log(results);
                             results.forEach(r => {
                                 winnerGraph[r.winner].push(r.loser);
                                 loserGraph[r.loser].push(r.winner);
