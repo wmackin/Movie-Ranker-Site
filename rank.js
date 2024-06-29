@@ -12,7 +12,6 @@ if (typeResponse.ok) {
 getTwoMovies();
 
 async function getTwoMovies() {
-    if (rankType === 'top' || unrankedMovies === undefined) {
         let pct = 0.9;
         while (pct >= 0) {
             console.log(pct);
@@ -34,10 +33,6 @@ async function getTwoMovies() {
                 }
             }
         }
-    }
-    else {
-        unrankedMovies.shift();
-    }
     if (unrankedMovies.length === 0) {
         document.getElementById('outOfMovies').innerHTML = 'Out of Movies';
         const rankingSection = document.getElementById('rankingsection');
