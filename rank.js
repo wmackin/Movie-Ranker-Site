@@ -90,6 +90,10 @@ async function getTwoMovies() {
 
 if (document.getElementById('movieButton1') !== undefined) {
     document.getElementById('movieButton1').addEventListener('click', async () => {
+        document.getElementById('movieTitle1').innerHTML = '';
+        document.getElementById('movieTitle2').innerHTML = '';
+        document.getElementById('poster1').src = '';
+        document.getElementById('poster2').src = '';
         await fetch('/submitRanking', {
             method: "POST",
             redirect: 'follow',
@@ -107,6 +111,10 @@ if (document.getElementById('movieButton1') !== undefined) {
 
 if (document.getElementById('movieButton2') !== undefined) {
     document.getElementById('movieButton2').addEventListener('click', async () => {
+        document.getElementById('movieTitle1').innerHTML = '';
+        document.getElementById('movieTitle2').innerHTML = '';
+        document.getElementById('poster1').src = '';
+        document.getElementById('poster2').src = '';
         await fetch('/submitRanking', {
             method: "POST",
             redirect: 'follow',
