@@ -222,9 +222,7 @@ app.post('/getList', function (req, res) {
     connection.query('SELECT COUNT(*) FROM lists WHERE username = ? AND list = ?', [username, listName], function (error, results) {
         if (error) throw error;
         const count = results[0]['COUNT(*)'];
-        console.log(count);
         const additionalValues = Math.ceil(count / 10);
-        console.log(additionalValues);
         connection.query('SELECT *, (wins + ?) / (wins + losses + (2 * ?)) AS score FROM lists WHERE username = ? AND list = ? ORDER BY score DESC;', [additionalValues, additionalValues, username, listName], function (error, results) {
             if (error) throw error;
             res.send(results);
