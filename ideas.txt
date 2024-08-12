@@ -15,3 +15,4 @@ Dropdown for ranking type
 DONE Ranking option for "newest", selecting the movie with fewest rankings
 DONE Replace rank top with just fetching where winning percents over .9 or something? Then do iterative deepening.
 Rename list
+DONE Base added wins and losses on total number of movies, like 10% rounded up or something, so in a list of 91 items, each item has 10 wins and losses added to its totals upon ranking.

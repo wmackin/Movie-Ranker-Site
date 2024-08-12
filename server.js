@@ -176,7 +176,7 @@ app.post('/resetList', function (req, res) {
                 unrankedPairs.add(r['id2'] + r['id1']);
             });
             for (let i = 0; i < items.length; i++) {
-                for (let j = i+1; j < items.length; j++) {
+                for (let j = i + 1; j < items.length; j++) {
                     if (!unrankedPairs.has(items[i]['id'] + items[j]['id'])) {
                         if (Math.random() < 0.5) {
                             connection.query('INSERT INTO unranked VALUES(?, ?, ?, ?);', [username, listName, items[i]['id'], items[j]['id']], function (error, results) {
@@ -219,10 +219,17 @@ app.post('/deleteList', function (req, res) {
 app.post('/getList', function (req, res) {
     const username = req.session.username;
     const listName = req.body.listName;
-    connection.query('SELECT *, (wins + 1) / (wins + losses + 2) AS score FROM lists WHERE username = ? AND list = ? ORDER BY score DESC;', [username, listName], function (error, results) {
+    connection.query('SELECT COUNT(*) FROM lists WHERE username = ? AND list = ?', [username, listName], function (error, results) {
         if (error) throw error;
-        res.send(results);
-        res.end();
+        const count = results[0]['COUNT(*)'];
+        console.log(count);
+        const additionalValues = Math.ceil(count / 10);
+        console.log(additionalValues);
+        connection.query('SELECT *, (wins + ?) / (wins + losses + (2 * ?)) AS score FROM lists WHERE username = ? AND list = ? ORDER BY score DESC;', [additionalValues, additionalValues, username, listName], function (error, results) {
+            if (error) throw error;
+            res.send(results);
+            res.end();
+        });
     });
 });
 
@@ -397,7 +404,7 @@ app.post('/submitSmartRanking', async function (req, res) {
                                 });
                                 queue.shift();
                             };
-                            
+
                             //at this point, have the winner beat any descendants it has not yet gone against
                             //utilized chatgpt to rewrite the function to ensure all SQL statements ran before returning
                             async function winOverDescendants() {
@@ -516,8 +523,8 @@ app.post('/replacePoster', function (req, res) {
     });
 });
 
-app.get('/rankType', function(req, res) {
-    res.json({'type': req.session.rankType});
+app.get('/rankType', function (req, res) {
+    res.json({ 'type': req.session.rankType });
 })
 
 //authentication, sourced from https://codeshack.io/basic-login-system-nodejs-express-mysql/
