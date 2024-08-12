@@ -130,9 +130,14 @@ app.post('/getUnranked', function (req, res) {
     }
     else if (rankType === 'top') {
         const pct = req.body.pct;
-        connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id AND ((l.wins + 1) / (l.wins + l.losses + 2)) >= ? AND ((z.wins + 1) / (z.wins + z.losses + 2)) >= ? ORDER BY LEAST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) DESC, GREATEST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) DESC;', [username, listName, pct, pct], function (error, results) {
+        connection.query('SELECT COUNT(*) FROM lists WHERE username = ? AND list = ?', [username, listName], function (error, results) {
             if (error) throw error;
-            res.json(results);
+            const count = results[0]['COUNT(*)'];
+            const additionalValues = Math.ceil(count / 10);
+            connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id AND ((l.wins + ?) / (l.wins + l.losses + (2 * ?))) >= ? AND ((z.wins + ?) / (z.wins + z.losses + (2 * ?))) >= ? ORDER BY LEAST((l.wins + ?) / (l.wins + l.losses + (2 * ?)), (z.wins + ?) / (z.wins + z.losses + (2 * ?))) DESC, GREATEST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) DESC;', [username, listName, additionalValues, additionalValues, pct, additionalValues, additionalValues, pct, additionalValues, additionalValues, additionalValues, additionalValues], function (error, results) {
+                if (error) throw error;
+                res.json(results);
+            });
         });
     }
 });
