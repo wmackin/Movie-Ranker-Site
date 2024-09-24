@@ -14,7 +14,6 @@ getTwoMovies();
 async function getTwoMovies() {
         let pct = 0.9;
         while (pct >= 0) {
-            console.log(pct);
             const unrankedResponse = await fetch('/getUnranked', {
                 method: "POST",
                 redirect: 'follow',
@@ -31,6 +30,9 @@ async function getTwoMovies() {
                 else {
                     break;
                 }
+            }
+            else {
+                console.log("Error is here.")
             }
         }
     if (unrankedMovies.length === 0) {
@@ -65,6 +67,9 @@ async function getTwoMovies() {
                 document.getElementById('movieTitle1').innerHTML = info['title'];
             }
         }
+        else {
+            console.log("infoResponse1 is not ok");
+        }
         id2 = unrankedMovies[0]['id2'];
         const infoResponse2 = await fetch('/getInfo', {
             method: "POST",
@@ -84,6 +89,9 @@ async function getTwoMovies() {
             else {
                 document.getElementById('movieTitle2').innerHTML = info['title'];
             }
+        }
+        else {
+            console.log("infoResponse2 is not ok");
         }
     }
 }

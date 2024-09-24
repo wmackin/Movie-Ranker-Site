@@ -16,3 +16,6 @@ DONE Ranking option for "newest", selecting the movie with fewest rankings
 DONE Replace rank top with just fetching where winning percents over .9 or something? Then do iterative deepening.
 Rename list
 DONE Base added wins and losses on total number of movies, like 10% rounded up or something, so in a list of 91 items, each item has 10 wins and losses added to its totals upon ranking.
+Stop doing the top percentage thing if not doing top ranking. Also delete those print messages (this part is done).
+Smart rank has an error, if A > B, and D > E, C > D, and B > C, A > E isn't entered. Scared to fix this becauuse I don't want to cause a bug and have to restart everything. It also might add more runtime than is helpful. But if I ranked E > A then it causes disaster.
+Find the cause of the TypeError: Network Error messages I frequently get in the console.

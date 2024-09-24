@@ -662,7 +662,7 @@ app.get('/currentUser', (req, res) => {
 });
 
 app.post('/getInfo', (req, res) => {
-    connection.query('SELECT title, year, poster FROM lists WHERE id = ? AND username = ?;', [req.body.id, req.session.username], function (error, results) {
+    connection.query('SELECT title, year, poster FROM lists WHERE list = ? AND id = ? AND username = ?;', [req.session.list, req.body.id, req.session.username], function (error, results) {
         if (error) throw error;
         res.json(results);
     });
