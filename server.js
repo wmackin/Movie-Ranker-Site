@@ -152,10 +152,19 @@ app.get('/userLists', function (req, res) {
 app.post('/createList', function (req, res) {
     const username = req.session.username;
     const listName = req.body.listName;
-    connection.query('INSERT INTO list_names VALUES(?, ?);', [username, listName], function (error, results) {
+    connection.query('SELECT COUNT(*) FROM list_names WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
         if (error) throw error;
-        res.json({ 'success': true, 'msg': 'Successfully created ' + listName });
-    })
+        const count = results[0]['COUNT(*)'];
+        if (count > 0) {
+            res.json({ 'success': false, 'msg': listName + ' already exists.' });
+        }
+        else {
+            connection.query('INSERT INTO list_names VALUES(?, ?);', [username, listName], function (error, results) {
+                if (error) throw error;
+                res.json({ 'success': true, 'msg': 'Successfully created ' + listName });
+            });
+        }
+    });
 });
 
 app.post('/resetList', function (req, res) {
@@ -197,6 +206,37 @@ app.post('/resetList', function (req, res) {
                 }
             }
         });
+    });
+});
+
+app.post('/renameList', function (req, res) {
+    const username = req.session.username;
+    const oldListName = req.body.oldListName;
+    const newListName = req.body.newListName;
+    connection.query('SELECT COUNT(*) FROM list_names WHERE username = ? AND list = ?;', [username, newListName], function (error, results) {
+        if (error) throw error;
+        const count = results[0]['COUNT(*)'];
+        if (count > 0) {
+            res.json({ 'success': false, 'msg': newListName + ' already exists.' });
+        }
+        else {
+            connection.query('UPDATE lists SET list = ? WHERE username = ? and list = ?;', [newListName, username, oldListName], function (error, results) {
+                if (error) throw error;
+            });
+            connection.query('UPDATE list_names SET list = ? WHERE username = ? and list = ?;', [newListName, username, oldListName], function (error, results) {
+                if (error) throw error;
+            });
+            connection.query('UPDATE rankings SET list = ? WHERE username = ? AND list = ?;', [newListName, username, oldListName], function (error, results) {
+                if (error) throw error;
+            });
+            connection.query('UPDATE smart_rankings SET list = ? WHERE username = ? AND list = ?;', [newListName, username, oldListName], function (error, results) {
+                if (error) throw error;
+            });
+            connection.query('UPDATE unranked SET list = ? WHERE username = ? AND list = ?;', [newListName, username, oldListName], function (error, results) {
+                if (error) throw error;
+            });
+            res.json({ 'success': true, 'msg': oldListName + ' has been changed to ' + newListName });
+        }
     });
 });
 

@@ -29,6 +29,9 @@ document.getElementById('createList').addEventListener('click', async () => {
             const dropdown = document.getElementById('userLists');
             dropdown.appendChild(element);
         }
+        else {
+            document.getElementById('confirmationMessage').innerHTML = results['msg'];
+        }
     }
 });
 
@@ -54,7 +57,28 @@ document.getElementById('resetList').addEventListener('click', async () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ listName: listName }),
         });
-        location.reload();
+    }
+});
+
+document.getElementById('renameList').addEventListener('click', async () => {
+    const listName = document.getElementById('userLists').value;
+    const newListName = window.prompt("Enter new list name");
+    if (newListName !== null && newListName.length > 0) {
+        const response = await fetch('/renameList', {
+            method: "POST",
+            redirect: 'follow',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ oldListName: listName, newListName: newListName }),
+        });
+        if (response.ok) {
+            const results = await response.json();
+            if (results['success']) {
+                location.reload();
+            }
+            else {
+                document.getElementById('confirmationMessage').innerHTML = results['msg'];
+            }
+        }
     }
 });
 
@@ -102,7 +126,7 @@ document.getElementById('viewList').addEventListener('click', async () => {
         }
         for (let i = 0; i < list.length; i++) {
             const textNode = document.createElement('h3');
-            textNode.innerHTML = (i+1).toString() + '. ' + list[i]['title']
+            textNode.innerHTML = (i + 1).toString() + '. ' + list[i]['title']
             const newDiv = document.createElement('div');
             newDiv.appendChild(textNode);
             viewingDiv.appendChild(newDiv);
