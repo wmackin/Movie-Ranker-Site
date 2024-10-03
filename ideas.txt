@@ -19,3 +19,5 @@ DONE Base added wins and losses on total number of movies, like 10% rounded up o
 DONE Stop doing the top percentage thing if not doing top ranking. Also delete those print messages.
 Figure out a new way to do smart ranking.
 Find the cause of the TypeError: Network Error messages I frequently get in the console.
+Bulk Add Custom Items
+List Folders
