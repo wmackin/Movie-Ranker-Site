@@ -28,3 +28,7 @@ h2 {
     display: flex;
     float: left;
 }
+
+#autorankThreshold {
+    width: 50px
+}

@@ -12,11 +12,12 @@ if (userResponse.ok) {
 
 document.getElementById('createList').addEventListener('click', async () => {
     const listName = document.getElementById('newList').value;
+    const autorankThreshold = document.getElementById('autorankThreshold').value;
     const response = await fetch('/createList', {
         method: "POST",
         redirect: 'follow',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listName: listName }),
+        body: JSON.stringify({ listName: listName, autorankThreshold: autorankThreshold }),
     });
     if (response.ok) {
         const results = await response.json();

@@ -40,7 +40,8 @@ document.getElementById('searchMovie').addEventListener('click', async e => {
                         errorText.class = 'error';
                         const addToList = document.createElement('button');
                         addToList.innerHTML = 'Add to list';
-                        addToList.addEventListener('click', async () => {
+                        addToList.addEventListener('click', async (e) => {
+                            const autorankScore = window.parseInt(window.prompt('Select a score for autoranking'));
                             const listName = dropdownCopy.options[dropdownCopy.selectedIndex].value;;
                             const addResponse = await fetch('/addToList', {
                                 method: "POST",
@@ -48,7 +49,7 @@ document.getElementById('searchMovie').addEventListener('click', async e => {
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
                                     listName: listName, id: id, title: name,
-                                    year: year, poster: img
+                                    year: year, poster: img, autorankScore: autorankScore
                                 }),
                             });
                             if (addResponse.ok) {
@@ -162,7 +163,10 @@ document.getElementById('searchID').addEventListener('click', async e => {
                     errorText.class = 'error';
                     const addToList = document.createElement('button');
                     addToList.innerHTML = 'Add to list';
-                    addToList.addEventListener('click', async () => {
+                    addToList.addEventListener('click', async (e) => {
+                        console.log('test 1');
+                        const autorankScore = window.parseInt(window.prompt('Select a score for autoranking'));
+                        console.log('test 2');
                         const listName = dropdownCopy.options[dropdownCopy.selectedIndex].value;;
                         const addResponse = await fetch('/addToList', {
                             method: "POST",
@@ -170,7 +174,7 @@ document.getElementById('searchID').addEventListener('click', async e => {
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 listName: listName, id: id, title: name,
-                                year: year, poster: img
+                                year: year, poster: img, autorank_score: autorankScore
                             }),
                         });
                         if (addResponse.ok) {

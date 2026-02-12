@@ -162,6 +162,7 @@ app.get('/userLists', function (req, res) {
 app.post('/createList', function (req, res) {
     const username = req.session.username;
     const listName = req.body.listName;
+    const autorankThreshold = req.body.autorankThreshold;
     connection.query('SELECT COUNT(*) FROM list_names WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
         if (error) throw error;
         const count = results[0]['COUNT(*)'];
@@ -169,7 +170,7 @@ app.post('/createList', function (req, res) {
             res.json({ 'success': false, 'msg': listName + ' already exists.' });
         }
         else {
-            connection.query('INSERT INTO list_names VALUES(?, ?);', [username, listName], function (error, results) {
+            connection.query('INSERT INTO list_names VALUES(?, ?, ?);', [username, listName, autorankThreshold], function (error, results) {
                 if (error) throw error;
                 res.json({ 'success': true, 'msg': 'Successfully created ' + listName });
             });
@@ -184,9 +185,6 @@ app.post('/resetList', function (req, res) {
         if (error) throw error;
     });
     connection.query('DELETE FROM rankings WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
-        if (error) throw error;
-    });
-    connection.query('DELETE FROM smart_rankings WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
         if (error) throw error;
     });
     connection.query('SELECT id FROM lists WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
@@ -239,9 +237,6 @@ app.post('/renameList', function (req, res) {
             connection.query('UPDATE rankings SET list = ? WHERE username = ? AND list = ?;', [newListName, username, oldListName], function (error, results) {
                 if (error) throw error;
             });
-            connection.query('UPDATE smart_rankings SET list = ? WHERE username = ? AND list = ?;', [newListName, username, oldListName], function (error, results) {
-                if (error) throw error;
-            });
             connection.query('UPDATE unranked SET list = ? WHERE username = ? AND list = ?;', [newListName, username, oldListName], function (error, results) {
                 if (error) throw error;
             });
@@ -260,9 +255,6 @@ app.post('/deleteList', function (req, res) {
         if (error) throw error;
     });
     connection.query('DELETE FROM rankings WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
-        if (error) throw error;
-    });
-    connection.query('DELETE FROM smart_rankings WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
         if (error) throw error;
     });
     connection.query('DELETE FROM unranked WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
@@ -294,6 +286,7 @@ app.post('/addToList', function (req, res) {
     const title = req.body.title;
     const year = parseInt(req.body.year);
     const poster = req.body.poster;
+    const autorankScore = req.body.autorankScore
     connection.query('SELECT * FROM lists WHERE username = ? AND list = ? AND id = ?;', [username, listName, id], function (error, results) {
         if (error) throw error;
         if (results.length !== 0) {
@@ -303,6 +296,7 @@ app.post('/addToList', function (req, res) {
         else {
             connection.query('SELECT * FROM lists WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
                 if (error) throw error;
+                // TODO: perform ranking if rank threshold difference met
                 results.forEach(r => {
                     if (Math.random() < 0.5) {
                         connection.query('INSERT INTO unranked VALUES(?, ?, ?, ?);', [username, listName, id, r['id']], function (error, results) {
@@ -316,7 +310,7 @@ app.post('/addToList', function (req, res) {
                     }
                 });
             });
-            connection.query('INSERT INTO lists VALUES(?, ?, ?, ?, ?, NULL, ?, 0, 0);', [username, listName, id, title, year, poster], function (error, results) {
+            connection.query('INSERT INTO lists VALUES(?, ?, ?, ?, ?, NULL, ?, 0, 0, ?);', [username, listName, id, title, year, poster, autorankScore], function (error, results) {
                 if (error) throw error;
                 res.json({ 'msg': 'Successfully added ' + title + ' to list.' });
                 res.end();
@@ -361,30 +355,6 @@ app.post('/removeFromList', function (req, res) {
                     });
                     connection.query('DELETE FROM rankings WHERE username = ? AND list = ? AND (winner = ? OR loser = ?);', [username, listName, id, id], function (error, results) {
                         if (error) throw error;
-                    });
-
-                });
-            });
-            connection.query('SELECT * FROM smart_rankings WHERE username = ? AND list = ? AND winner = ?;', [username, listName, id], function (error, results) {
-                if (error) throw error;
-                results.forEach(r => {
-                    const loser = r['loser'];
-                    connection.query('UPDATE lists SET losses = losses - 1 WHERE username = ? AND list = ? AND id = ?;', [username, listName, loser], function (error, results) {
-                        if (error) throw error;
-                    });
-                });
-                connection.query('SELECT * FROM smart_rankings WHERE username = ? AND list = ? AND loser = ?;', [username, listName, id], function (error, results) {
-                    if (error) throw error;
-                    results.forEach(r => {
-                        const winner = r['winner'];
-                        connection.query('UPDATE lists SET wins = wins - 1 WHERE username = ? AND list = ? AND id = ?;', [username, listName, winner], function (error, results) {
-                            if (error) throw error;
-                        });
-                    });
-                    connection.query('DELETE FROM smart_rankings WHERE username = ? AND list = ? AND (winner = ? OR loser = ?);', [username, listName, id, id], function (error, results) {
-                        if (error) throw error;
-                        res.json({ 'msg': 'Successfully removed movie from list.' });
-                        res.end();
                     });
 
                 });
