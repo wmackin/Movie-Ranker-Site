@@ -179,6 +179,7 @@ app.post('/createList', function (req, res) {
 });
 
 app.post('/resetList', function (req, res) {
+    //to-do: reset the autorank threshold
     const username = req.session.username;
     const listName = req.body.listName;
     connection.query('UPDATE lists SET wins = 0, losses = 0 WHERE username = ? and list = ?;', [username, listName], function (error, results) {
@@ -286,37 +287,67 @@ app.post('/addToList', function (req, res) {
     const title = req.body.title;
     const year = parseInt(req.body.year);
     const poster = req.body.poster;
-    const autorankScore = req.body.autorankScore
-    connection.query('SELECT * FROM lists WHERE username = ? AND list = ? AND id = ?;', [username, listName, id], function (error, results) {
+    const newAutorankScore = req.body.autorankScore
+    connection.query('SELECT * FROM list_names WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
         if (error) throw error;
-        if (results.length !== 0) {
-            res.json({ 'msg': 'Movie already in list.' });
-            res.end();
-        }
-        else {
-            connection.query('SELECT * FROM lists WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
-                if (error) throw error;
-                // TODO: perform ranking if rank threshold difference met
-                results.forEach(r => {
-                    if (Math.random() < 0.5) {
-                        connection.query('INSERT INTO unranked VALUES(?, ?, ?, ?);', [username, listName, id, r['id']], function (error, results) {
-                            if (error) throw error;
-                        });
-                    }
-                    else {
-                        connection.query('INSERT INTO unranked VALUES(?, ?, ?, ?);', [username, listName, r['id'], id], function (error, results) {
-                            if (error) throw error;
-                        });
-                    }
-                });
-            });
-            connection.query('INSERT INTO lists VALUES(?, ?, ?, ?, ?, NULL, ?, 0, 0, ?);', [username, listName, id, title, year, poster, autorankScore], function (error, results) {
-                if (error) throw error;
-                res.json({ 'msg': 'Successfully added ' + title + ' to list.' });
+        const autorankThreshold = results[0].autorank_threshold;
+        connection.query('SELECT * FROM lists WHERE username = ? AND list = ? AND id = ?;', [username, listName, id], function (error, results) {
+            if (error) throw error;
+            if (results.length !== 0) {
+                res.json({ 'msg': 'Movie already in list.' });
                 res.end();
-            });
+            }
+            else {
+                connection.query('INSERT INTO lists VALUES(?, ?, ?, ?, ?, NULL, ?, 0, 0, ?);', [username, listName, id, title, year, poster, newAutorankScore], function (error, results) {
+                    if (error) throw error;
+                    res.json({ 'msg': 'Successfully added ' + title + ' to list.' });
+                    res.end();
+                    connection.query('SELECT * FROM lists WHERE username = ? AND list = ? AND id != ?;', [username, listName, id], function (error, results) {
+                        if (error) throw error;
+                        results.forEach(r => {
+                            const existingAutorankScore = r['autorank_score'];
+                            if (Math.abs(existingAutorankScore - newAutorankScore) >= autorankThreshold) {
+                                if (existingAutorankScore >= newAutorankScore) {
+                                    connection.query('INSERT INTO rankings VALUES(?, ?, ?, ?);', [username, listName, r['id'], id], function (error, results) {
+                                        if (error) throw error;
+                                    });
+                                    connection.query('UPDATE lists SET wins = wins + 1 WHERE username = ? AND list = ? and id = ?;', [username, listName, r['id']], function (error, results) {
+                                        if (error) throw error;
+                                    });
+                                    connection.query('UPDATE lists SET losses = losses + 1 WHERE username = ? AND list = ? and id = ?;', [username, listName, id], function (error, results) {
+                                        if (error) throw error;
+                                    });
+                                }
+                                else {
+                                    connection.query('INSERT INTO rankings VALUES(?, ?, ?, ?);', [username, listName, id, r['id']], function (error, results) {
+                                        if (error) throw error;
+                                    });
+                                    connection.query('UPDATE lists SET wins = wins + 1 WHERE username = ? AND list = ? and id = ?;', [username, listName, id], function (error, results) {
+                                        if (error) throw error;
+                                    });
+                                    connection.query('UPDATE lists SET losses = losses + 1 WHERE username = ? AND list = ? and id = ?;', [username, listName, r['id']], function (error, results) {
+                                        if (error) throw error;
+                                    });
+                                }
+                            }
+                            else {
+                                if (Math.random() < 0.5) {
+                                    connection.query('INSERT INTO unranked VALUES(?, ?, ?, ?);', [username, listName, id, r['id']], function (error, results) {
+                                        if (error) throw error;
+                                    });
+                                }
+                                else {
+                                    connection.query('INSERT INTO unranked VALUES(?, ?, ?, ?);', [username, listName, r['id'], id], function (error, results) {
+                                        if (error) throw error;
+                                    });
+                                }
+                            }
+                        });
+                    });
+                });
 
-        }
+            }
+        });
     });
 });
 

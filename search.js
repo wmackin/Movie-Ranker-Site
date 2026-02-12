@@ -174,7 +174,7 @@ document.getElementById('searchID').addEventListener('click', async e => {
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 listName: listName, id: id, title: name,
-                                year: year, poster: img, autorank_score: autorankScore
+                                year: year, poster: img, autorankScore: autorankScore
                             }),
                         });
                         if (addResponse.ok) {
