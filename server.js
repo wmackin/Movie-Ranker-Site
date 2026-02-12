@@ -34,7 +34,7 @@ const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
     password: getPassword(),
-    database: 'rankings'
+    database: 'rankingsv2'
 });
 
 //encryption source: https://code-boxx.com/simple-javascript-password-encryption-decryption/
@@ -133,8 +133,18 @@ app.post('/getUnranked', function (req, res) {
         connection.query('SELECT COUNT(*) FROM lists WHERE username = ? AND list = ?', [username, listName], function (error, results) {
             if (error) throw error;
             const count = results[0]['COUNT(*)'];
-            const additionalValues = Math.ceil(count / 20);
+            const additionalValues = 1;
             connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankings.unranked AS u, rankings.lists AS l, rankings.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id AND ((l.wins + ?) / (l.wins + l.losses + (2 * ?))) >= ? AND ((z.wins + ?) / (z.wins + z.losses + (2 * ?))) >= ? ORDER BY LEAST((l.wins + ?) / (l.wins + l.losses + (2 * ?)), (z.wins + ?) / (z.wins + z.losses + (2 * ?))) DESC, GREATEST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) DESC;', [username, listName, additionalValues, additionalValues, pct, additionalValues, additionalValues, pct, additionalValues, additionalValues, additionalValues, additionalValues], function (error, results) {
+                if (error) throw error;
+                res.json(results);
+            });
+        });
+    }
+    else if (rankType === 'least') {
+        connection.query('SELECT * FROM lists WHERE username = ? AND list = ? ORDER BY wins + losses LIMIT 1;', [username, listName], function (error, results) {
+            if (error) throw error;
+            const leastID = results[0]['id'];
+            connection.query('SELECT * FROM unranked WHERE username = ? AND list = ? AND (id1 = ? OR id2 = ?) ORDER BY RAND();', [username, listName, leastID, leastID], function (error, results) {
                 if (error) throw error;
                 res.json(results);
             });
@@ -267,7 +277,8 @@ app.post('/getList', function (req, res) {
     connection.query('SELECT COUNT(*) FROM lists WHERE username = ? AND list = ?', [username, listName], function (error, results) {
         if (error) throw error;
         const count = results[0]['COUNT(*)'];
-        const additionalValues = Math.ceil(count / 20);
+        // const additionalValues = Math.ceil(count / 100);
+        const additionalValues = 1; // trying out instead of old method
         connection.query('SELECT *, (wins + ?) / (wins + losses + (2 * ?)) AS score FROM lists WHERE username = ? AND list = ? ORDER BY score DESC;', [additionalValues, additionalValues, username, listName], function (error, results) {
             if (error) throw error;
             res.send(results);
@@ -307,7 +318,7 @@ app.post('/addToList', function (req, res) {
             });
             connection.query('INSERT INTO lists VALUES(?, ?, ?, ?, ?, NULL, ?, 0, 0);', [username, listName, id, title, year, poster], function (error, results) {
                 if (error) throw error;
-                res.json({ 'msg': 'Successfully added movie to list.' });
+                res.json({ 'msg': 'Successfully added ' + title + ' to list.' });
                 res.end();
             });
 
@@ -508,6 +519,19 @@ app.post('/rankListTop', async function (req, res) {
     }
 });
 
+app.post('/rankListLeast', async function (req, res) {
+    // If the user is loggedin
+    if (req.session.loggedin) {
+        req.session.list = req.body.listName;
+        res.redirect('/rankLeast')
+    }
+    else {
+        // Not logged in
+        res.send('Please login to view this page!');
+        res.end();
+    }
+});
+
 app.post('/createAccount', async (req, res) => {
     const username = req.body.user;
     const password = req.body.password;
@@ -527,6 +551,11 @@ app.get('/rank', (req, res) => {
 
 app.get('/rankTop', (req, res) => {
     req.session.rankType = 'top';
+    res.sendFile(path.join(__dirname + '/rank.html'));
+});
+
+app.get('/rankLeast', (req, res) => {
+    req.session.rankType = 'least';
     res.sendFile(path.join(__dirname + '/rank.html'));
 });
 
