@@ -390,6 +390,8 @@ app.post('/removeFromList', function (req, res) {
 
                 });
             });
+            res.json({ 'msg': 'Movie successfully removed.' });
+            res.end();
         }
     });
 });

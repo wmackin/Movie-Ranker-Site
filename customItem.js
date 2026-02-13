@@ -1,3 +1,5 @@
+//to-do: make custom items prompt for auto rank score
+
 const dropdown = document.getElementById('listDropdown');
 const userResponse = await fetch('/userLists');
 if (userResponse.ok) {
@@ -13,6 +15,7 @@ if (userResponse.ok) {
 const errorText = document.getElementById('errorText');
 
 document.getElementById('addCustomItem').addEventListener('click', async () => {
+    const autorankScore = window.parseInt(window.prompt('Select a score for autoranking'));
     const listName = dropdown.options[dropdown.selectedIndex].value;;
     let year = document.getElementById('customYear').value;
     if (!year) {
@@ -26,7 +29,7 @@ document.getElementById('addCustomItem').addEventListener('click', async () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             listName: listName, id: name, title: name,
-            year: year, poster: img
+            year: year, poster: img, autorankScore: autorankScore
         }),
     });
     if (addResponse.ok) {
