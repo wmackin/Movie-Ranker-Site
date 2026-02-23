@@ -134,7 +134,17 @@ app.post('/getUnranked', function (req, res) {
             if (error) throw error;
             const count = results[0]['COUNT(*)'];
             const additionalValues = 1;
-            connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankingsv2.unranked AS u, rankingsv2.lists AS l, rankingsv2.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id AND ((l.wins + ?) / (l.wins + l.losses + (2 * ?))) >= ? AND ((z.wins + ?) / (z.wins + z.losses + (2 * ?))) >= ? ORDER BY LEAST((l.wins + ?) / (l.wins + l.losses + (2 * ?)), (z.wins + ?) / (z.wins + z.losses + (2 * ?))) DESC, GREATEST((l.wins + 1) / (l.wins + l.losses + 2), (z.wins + 1) / (z.wins + z.losses + 2)) DESC;', [username, listName, additionalValues, additionalValues, pct, additionalValues, additionalValues, pct, additionalValues, additionalValues, additionalValues, additionalValues], function (error, results) {
+            connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankingsv2.unranked AS u, rankingsv2.lists AS l, rankingsv2.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id AND ((l.wins + ?) / (l.wins + l.losses + (2 * ?))) >= ? AND ((z.wins + ?) / (z.wins + z.losses + (2 * ?))) >= ? ORDER BY LEAST((l.wins + ?) / (l.wins + l.losses + (2 * ?)), (z.wins + ?) / (z.wins + z.losses + (2 * ?))) DESC;', [username, listName, additionalValues, additionalValues, pct, additionalValues, additionalValues, pct, additionalValues, additionalValues, additionalValues, additionalValues], function (error, results) {
+                if (error) throw error;
+                res.json(results);
+            });
+        });
+    }
+    else if (rankType === 'topish') {
+        const pct = req.body.pct;
+        connection.query('SELECT COUNT(*) FROM lists WHERE username = ? AND list = ?', [username, listName], function (error, results) {
+            if (error) throw error;
+            connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankingsv2.unranked AS u, rankingsv2.lists AS l, rankingsv2.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id AND l.autorank_score + z.autorank_score >= ? ORDER BY l.autorank_score + z.autorank_score DESC, RAND() LIMIT 1;', [username, listName, pct * 10], function (error, results) {
                 if (error) throw error;
                 res.json(results);
             });
@@ -143,7 +153,7 @@ app.post('/getUnranked', function (req, res) {
     else if (rankType === 'least') {
         connection.query('SELECT * FROM lists WHERE username = ? AND list = ? ORDER BY wins + losses LIMIT 1;', [username, listName], function (error, results) {
             if (error) throw error;
-            const leastID = results[0]['id'];
+            const leastID = results[0]['id']; 
             connection.query('SELECT * FROM unranked WHERE username = ? AND list = ? AND (id1 = ? OR id2 = ?) ORDER BY RAND();', [username, listName, leastID, leastID], function (error, results) {
                 if (error) throw error;
                 res.json(results);
@@ -152,7 +162,7 @@ app.post('/getUnranked', function (req, res) {
     }
 });
 app.get('/userLists', function (req, res) {
-    const username = req.session.username;
+    const username = req.session.username; 
     connection.query('SELECT list FROM list_names WHERE username = ?;', [username], function (error, results) {
         if (error) throw error;
         res.json(results);
@@ -522,6 +532,19 @@ app.post('/rankListTop', async function (req, res) {
     }
 });
 
+app.post('/rankListTopish', async function (req, res) {
+    // If the user is loggedin
+    if (req.session.loggedin) {
+        req.session.list = req.body.listName;
+        res.redirect('/rankTopish')
+    }
+    else {
+        // Not logged in
+        res.send('Please login to view this page!');
+        res.end();
+    }
+});
+
 app.post('/rankListLeast', async function (req, res) {
     // If the user is loggedin
     if (req.session.loggedin) {
@@ -554,6 +577,11 @@ app.get('/rank', (req, res) => {
 
 app.get('/rankTop', (req, res) => {
     req.session.rankType = 'top';
+    res.sendFile(path.join(__dirname + '/rank.html'));
+});
+
+app.get('/rankTopish', (req, res) => {
+    req.session.rankType = 'topish';
     res.sendFile(path.join(__dirname + '/rank.html'));
 });
 

@@ -165,6 +165,21 @@ document.getElementById('rankTopButton').addEventListener('click', async () => {
     }
 });
 
+document.getElementById('rankTopishButton').addEventListener('click', async () => {
+    const listName = document.getElementById('userLists').value;
+    const response = await fetch('/rankListTopish', {
+        method: "POST",
+        redirect: 'follow',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listName: listName }),
+    });
+    if (response.ok) {
+        if (response.redirected) {
+            window.location.assign(response.url);
+        }
+    }
+});
+
 
 document.getElementById('rankLeastButton').addEventListener('click', async () => {
     const listName = document.getElementById('userLists').value;
