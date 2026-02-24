@@ -166,12 +166,13 @@ document.getElementById('rankTopButton').addEventListener('click', async () => {
 });
 
 document.getElementById('rankTopishButton').addEventListener('click', async () => {
+    const autorankScore = window.parseInt(window.prompt('Select a score for autoranking score threshold'));
     const listName = document.getElementById('userLists').value;
     const response = await fetch('/rankListTopish', {
         method: "POST",
         redirect: 'follow',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listName: listName }),
+        body: JSON.stringify({ listName: listName, autorankThreshold: autorankScore }),
     });
     if (response.ok) {
         if (response.redirected) {

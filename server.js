@@ -141,10 +141,10 @@ app.post('/getUnranked', function (req, res) {
         });
     }
     else if (rankType === 'topish') {
-        const pct = req.body.pct;
+        const autorankThreshold = req.session.autorankThreshold;
         connection.query('SELECT COUNT(*) FROM lists WHERE username = ? AND list = ?', [username, listName], function (error, results) {
             if (error) throw error;
-            connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankingsv2.unranked AS u, rankingsv2.lists AS l, rankingsv2.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id AND l.autorank_score + z.autorank_score >= ? ORDER BY l.autorank_score + z.autorank_score DESC, RAND() LIMIT 1;', [username, listName, pct * 10], function (error, results) {
+            connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankingsv2.unranked AS u, rankingsv2.lists AS l, rankingsv2.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id AND l.autorank_score >= ? AND z.autorank_score >= ? ORDER BY RAND() LIMIT 1;', [username, listName, autorankThreshold, autorankThreshold], function (error, results) {
                 if (error) throw error;
                 res.json(results);
             });
@@ -440,7 +440,7 @@ app.post('/replacePoster', function (req, res) {
 });
 
 app.get('/rankType', function (req, res) {
-    res.json({ 'type': req.session.rankType });
+    res.json({ 'type': req.session.rankType, 'autorankThreshold': req.session.autorankThreshold });
 })
 
 //authentication, sourced from https://codeshack.io/basic-login-system-nodejs-express-mysql/
@@ -536,6 +536,7 @@ app.post('/rankListTopish', async function (req, res) {
     // If the user is loggedin
     if (req.session.loggedin) {
         req.session.list = req.body.listName;
+        req.session.autorankThreshold = req.body.autorankThreshold;
         res.redirect('/rankTopish')
     }
     else {

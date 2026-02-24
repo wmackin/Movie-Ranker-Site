@@ -2,11 +2,13 @@ let id1;
 let id2;
 let unrankedMovies;
 let rankType;
+let autoRankThreshold;
 
 const typeResponse = await fetch('/rankType');
 if (typeResponse.ok) {
     const typeJSON = await typeResponse.json();
     rankType = typeJSON['type'];
+    autoRankThreshold = typeJSON['autorankThreshold'];
 }
 
 getTwoMovies();
