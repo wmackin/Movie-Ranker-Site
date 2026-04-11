@@ -34,6 +34,9 @@ document.getElementById('searchMovie').addEventListener('click', async e => {
                         const imgNode = document.createElement('img');
                         imgNode.src = img;
                         const heading = document.createElement('h1');
+                        const tagsLabel = document.createElement('label');
+                        tagsLabel.innerHTML = " Enter any tags here separated by commas: ";
+                        const tagsInput = document.createElement('input');
                         heading.innerHTML = `${name} (${year})`;
                         const dropdownCopy = dropdown.cloneNode(true);
                         const errorText = document.createElement('p');
@@ -49,7 +52,8 @@ document.getElementById('searchMovie').addEventListener('click', async e => {
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
                                     listName: listName, id: id, title: name,
-                                    year: year, poster: img, autorankScore: autorankScore
+                                    year: year, poster: img, autorankScore: autorankScore,
+                                    tags: tagsInput.value
                                 }),
                             });
                             if (addResponse.ok) {
@@ -78,6 +82,10 @@ document.getElementById('searchMovie').addEventListener('click', async e => {
                         resultDiv.id = id;
                         resultDiv.appendChild(imgNode);
                         resultDiv.appendChild(heading);
+                        resultDiv.appendChild(tagsLabel);
+                        resultDiv.appendChild(tagsInput);
+                        resultDiv.appendChild(document.createElement('br'));
+                        resultDiv.appendChild(document.createElement('br'));
                         resultDiv.appendChild(dropdownCopy);
                         resultDiv.appendChild(addToList);
                         resultDiv.appendChild(removeFromList);
@@ -158,6 +166,9 @@ document.getElementById('searchID').addEventListener('click', async e => {
                     imgNode.src = img;
                     const heading = document.createElement('h1');
                     heading.innerHTML = `${name} (${year})`;
+                    const tagsLabel = document.createElement('label');
+                    tagsLabel.innerHTML = " Enter any tags here separated by commas: ";
+                    const tagsInput = document.createElement('input');
                     const dropdownCopy = dropdown.cloneNode(true);
                     const errorText = document.createElement('p');
                     errorText.class = 'error';
@@ -174,7 +185,8 @@ document.getElementById('searchID').addEventListener('click', async e => {
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 listName: listName, id: id, title: name,
-                                year: year, poster: img, autorankScore: autorankScore
+                                year: year, poster: img, autorankScore: autorankScore,
+                                tags: tagsInput.value
                             }),
                         });
                         if (addResponse.ok) {
@@ -203,6 +215,10 @@ document.getElementById('searchID').addEventListener('click', async e => {
                     resultDiv.id = id;
                     resultDiv.appendChild(imgNode);
                     resultDiv.appendChild(heading);
+                    resultDiv.appendChild(tagsLabel);
+                    resultDiv.appendChild(tagsInput);
+                    resultDiv.appendChild(document.createElement('br'));
+                    resultDiv.appendChild(document.createElement('br'));
                     resultDiv.appendChild(dropdownCopy);
                     resultDiv.appendChild(addToList);
                     resultDiv.appendChild(removeFromList);

@@ -134,7 +134,7 @@ app.post('/getUnranked', function (req, res) {
             if (error) throw error;
             const count = results[0]['COUNT(*)'];
             const additionalValues = 1;
-            connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankingsv2.unranked AS u, rankingsv2.lists AS l, rankingsv2.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id AND ((l.wins + ?) / (l.wins + l.losses + (2 * ?))) >= ? AND ((z.wins + ?) / (z.wins + z.losses + (2 * ?))) >= ? ORDER BY LEAST((l.wins + ?) / (l.wins + l.losses + (2 * ?)), (z.wins + ?) / (z.wins + z.losses + (2 * ?))) DESC;', [username, listName, additionalValues, additionalValues, pct, additionalValues, additionalValues, pct, additionalValues, additionalValues, additionalValues, additionalValues], function (error, results) {
+            connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankingsv2.unranked AS u, rankingsv2.lists AS l, rankingsv2.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id AND ((l.wins + ?) / (l.wins + l.losses + (2 * ?))) >= ? AND ((z.wins + ?) / (z.wins + z.losses + (2 * ?))) >= ? ORDER BY LEAST((l.wins + ?) / (l.wins + l.losses + (2 * ?)), (z.wins + ?) / (z.wins + z.losses + (2 * ?))) DESC, GREATEST((l.wins + 1) / (l.wins + l.losses + (2 * 1)), (z.wins + 1) / (z.wins + z.losses + (2 * 1))) DESC;', [username, listName, additionalValues, additionalValues, pct, additionalValues, additionalValues, pct, additionalValues, additionalValues, additionalValues, additionalValues], function (error, results) {
                 if (error) throw error;
                 res.json(results);
             });
@@ -144,7 +144,7 @@ app.post('/getUnranked', function (req, res) {
         const autorankThreshold = req.session.autorankThreshold;
         connection.query('SELECT COUNT(*) FROM lists WHERE username = ? AND list = ?', [username, listName], function (error, results) {
             if (error) throw error;
-            connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankingsv2.unranked AS u, rankingsv2.lists AS l, rankingsv2.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id AND l.autorank_score >= ? AND z.autorank_score >= ? ORDER BY RAND() LIMIT 1;', [username, listName, autorankThreshold, autorankThreshold], function (error, results) {
+            connection.query('SELECT u.username, u.list, u.id1, u.id2 FROM rankingsv2.unranked AS u, rankingsv2.lists AS l, rankingsv2.lists AS z WHERE u.username = ? AND l.username = u.username AND z.username = u.username AND u.list = ? AND l.list = u.list AND z.list = u.list AND u.id1 = l.id AND u.id2 = z.id AND (l.autorank_score >= ? AND z.autorank_score >= ?) ORDER BY RAND() LIMIT 1;', [username, listName, autorankThreshold, autorankThreshold], function (error, results) {
                 if (error) throw error;
                 res.json(results);
             });
@@ -298,6 +298,7 @@ app.post('/addToList', function (req, res) {
     const year = parseInt(req.body.year);
     const poster = req.body.poster;
     const newAutorankScore = req.body.autorankScore
+    const tags = req.body.tags;
     connection.query('SELECT * FROM list_names WHERE username = ? AND list = ?;', [username, listName], function (error, results) {
         if (error) throw error;
         const autorankThreshold = results[0].autorank_threshold;
@@ -308,7 +309,7 @@ app.post('/addToList', function (req, res) {
                 res.end();
             }
             else {
-                connection.query('INSERT INTO lists VALUES(?, ?, ?, ?, ?, NULL, ?, 0, 0, ?);', [username, listName, id, title, year, poster, newAutorankScore], function (error, results) {
+                connection.query('INSERT INTO lists VALUES(?, ?, ?, ?, ?, NULL, ?, 0, 0, ?, ?, 1);', [username, listName, id, title, year, poster, newAutorankScore, tags], function (error, results) {
                     if (error) throw error;
                     res.json({ 'msg': 'Successfully added ' + title + ' to list.' });
                     res.end();
