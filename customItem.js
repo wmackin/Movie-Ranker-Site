@@ -23,13 +23,15 @@ document.getElementById('addCustomItem').addEventListener('click', async () => {
     }
     const name = document.getElementById('customName').value;
     const img = document.getElementById('customImg').value;
+    const tags = document.getElementById('customTags').value;
     const addResponse = await fetch('/addToList', {
         method: "POST",
         redirect: 'follow',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             listName: listName, id: name, title: name,
-            year: year, poster: img, autorankScore: autorankScore
+            year: year, poster: img, autorankScore: autorankScore,
+            tags: tags
         }),
     });
     if (addResponse.ok) {
