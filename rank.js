@@ -3,6 +3,7 @@ let id2;
 let unrankedMovies;
 let rankType;
 let autoRankThreshold;
+let counter = -1;
 
 const typeResponse = await fetch('/rankType');
 if (typeResponse.ok) {
@@ -14,6 +15,8 @@ if (typeResponse.ok) {
 getTwoMovies();
 
 async function getTwoMovies() {
+    counter += 1;
+    document.getElementById('counter').innerHTML = 'Counter: ' + counter;
     let pct = 0;
     if (rankType === 'top') {
         pct = 0.9;
