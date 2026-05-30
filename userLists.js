@@ -85,6 +85,9 @@ document.getElementById('renameList').addEventListener('click', async () => {
 
 document.getElementById('viewGrid').addEventListener('click', async () => {
     const listName = document.getElementById('userLists').value;
+    const tagsFiltered = document.getElementById('tagFilter').value;
+    const tagsList = tagsFiltered.split(',')
+    console.log(tagsList)
     const response = await fetch('/getList', {
         method: "POST",
         redirect: 'follow',
@@ -99,19 +102,24 @@ document.getElementById('viewGrid').addEventListener('click', async () => {
             viewingDiv.removeChild(viewingDiv.firstChild);
         }
         list.forEach(m => {
-            const imgNode = document.createElement('img');
-            imgNode.src = m['poster'];
-            imgNode.classList.add('image-display')
-            const newDiv = document.createElement('div');
-            newDiv.classList.add('grid-item');
-            newDiv.appendChild(imgNode);
-            viewingDiv.appendChild(newDiv);
+            const itemTags = m['tags'].split(',')
+            if (tagsFiltered.length === 0 || tagsList.every(t => itemTags.includes(t))) {
+                const imgNode = document.createElement('img');
+                imgNode.src = m['poster'];
+                imgNode.classList.add('image-display')
+                const newDiv = document.createElement('div');
+                newDiv.classList.add('grid-item');
+                newDiv.appendChild(imgNode);
+                viewingDiv.appendChild(newDiv);
+            }
         })
     }
 });
 
 document.getElementById('viewList').addEventListener('click', async () => {
     const listName = document.getElementById('userLists').value;
+    const tagsFiltered = document.getElementById('tagFilter').value;
+    const tagsList = tagsFiltered.split(',')
     const response = await fetch('/getList', {
         method: "POST",
         redirect: 'follow',
@@ -126,11 +134,14 @@ document.getElementById('viewList').addEventListener('click', async () => {
             viewingDiv.removeChild(viewingDiv.firstChild);
         }
         for (let i = 0; i < list.length; i++) {
-            const textNode = document.createElement('h3');
-            textNode.innerHTML = (i + 1).toString() + '. ' + list[i]['title']
-            const newDiv = document.createElement('div');
-            newDiv.appendChild(textNode);
-            viewingDiv.appendChild(newDiv);
+            const itemTags = list[i]['tags'].split(',')
+            if (tagsList.length === 0 || tagsList.every(t => itemTags.includes(t))) {
+                const textNode = document.createElement('h3');
+                textNode.innerHTML = (i + 1).toString() + '. ' + list[i]['title']
+                const newDiv = document.createElement('div');
+                newDiv.appendChild(textNode);
+                viewingDiv.appendChild(newDiv);
+            }
         }
     }
 });
