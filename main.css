@@ -19,7 +19,7 @@ h2 {
     text-align: center;
 }
 
-#logoutLink {
+.logoutLink {
     display: flex;
     float: right;
 }
