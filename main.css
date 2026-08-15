@@ -12,6 +12,10 @@ html {
     gap: 0px;
 }
 
+button {
+    margin: 2px;
+}
+
 img {
     width: 100%
 }

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -8,6 +9,7 @@
     <script src="userLists.js" type="module" defer></script>
     <title>Movie Ranker</title>
 </head>
+
 <body>
     <a href="/search" id="searchLink">Search</a>
     <a href="/logout" class="logoutLink">Logout</a><br><br>
@@ -19,22 +21,33 @@
     <input type="number" id="autorankThreshold" value="5">
     <button id="createList">Add</button>
     <p id="confirmationMessage"></p>
-    <br>
     <p>Optional Tag Filter: <input type="text" id="tagFilter"></p>
-    <br>
     <select name="Your lists" id="userLists"></select>
-    <button id="viewGrid">View as Grid</button>
-    <button id="viewList">View as List</button>
+    <select name="Rank Options" id="rankOptions">
+        <option id="viewGrid">View as Grid</option>
+        <option id="viewList">View as List</option>
+        <option id="rankButton">Rank</option>
+        <option id="rankTopButton">Rank Top Movies</option>
+        <option id="rankTopishButton">Rank Top(ish) Movies</option>
+        <option id="rankLeastButton">Rank Least Ranked Movies</option>
+        <option id="renameList">Rename List</option>
+        <option id="resetList">Reset List</option>
+        <option id="deleteList">Delete List</option>
+    </select>
+    <button id="enterRanking">Go!</button>
+    <!-- <button id="viewGrid">View as Grid</button>
+    <button id="viewList">View as List</button><br>
     <button id="rankButton">Rank</button>
     <button id="rankTopButton">Rank Top Movies</button>
     <button id="rankTopishButton">Rank Top(ish) Movies</button>
-    <button id="rankLeastButton">Rank Least Ranked Movies</button>
+    <button id="rankLeastButton">Rank Least Ranked Movies</button><br>
     <button id="duplicateList">Duplicate List</button>
     <button id="renameList">Rename List</button>
     <button id="resetList">Reset List</button>
-    <button id="deleteList">Delete List</button>
+    <button id="deleteList">Delete List</button> -->
     <br>
     <br>
     <div id="viewingDiv" class="grid-container"></div>
 </body>
+
 </html>
